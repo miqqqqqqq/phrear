@@ -513,6 +513,14 @@ Elenco iniziale:
   - Celle isolate.
 - **Unità di misura.** Valori sospetti per ordine di grandezza, per esempio una portata in l/s inserita come m³/d. Unità incompatibili con la grandezza della serie (errore).
 
+Controlli del modello registrati in M1a (ADR 0013):
+- periodo stazionario iniziale senza carichi imposti attivi (errore, soluzione indeterminata);
+- pozzo con filtro in celle a carico imposto (avviso);
+- ordine di grandezza: portata di un pozzo oltre 200 l/s, ricarica oltre 3000 mm/anno o non nulla sotto 1 mm/anno (avviso) [DA CONFERMARE le soglie];
+- formulazione di Newton disattivata con unità convertibili (avviso).
+
+Il comando `check` assembla il modello per fasi (tempo, griglia, parametri, carichi iniziali, condizioni al contorno, controlli del modello). Una fase che dipende da una fase con errori non viene eseguita. Parametri e condizioni al contorno riportano un errore per riga, unità o feature, così l'elenco è completo in un solo passaggio; le altre fasi riportano il primo errore. L'esito elenca prima gli errori e poi gli avvisi, ciascuno con codice, oggetto e suggerimento; con errori il codice di uscita è 1.
+
 Solo gli errori bloccano il run. Gli avvisi restano registrati nel log del run.
 
 ---
@@ -665,7 +673,7 @@ Registri interni:
   - lettura;
   - mappatura sullo schema interno;
   - report di import.
-- **`Check`:** id, severità, funzione di controllo, messaggio e suggerimento.
+- **`Check`:** id, etichette, severità, fasi richieste, funzione di controllo; messaggi e suggerimenti stanno nel catalogo degli errori (ADR 0013).
 - **`Exporter`:** formato, opzioni e funzione di scrittura.
 - **`ResultProduct`:** calcolo di un prodotto (bilancio, idrogramma, zona di cattura) a partire dai file del run.
 
@@ -845,7 +853,7 @@ Regole:
 
 **Accettazione:** superfici interpolate con incertezza su un caso reale, confrontate con i raster esistenti.
 
-**Stato attuale:** M1a in corso. Completati gli incrementi 1 (scheletro del repository, ambiente, CI), 2 (unità, errori, eventi JSON), 3 (formato del progetto, comandi `new`, `info`, `schema`, `migrate`) 4 (serie temporali, stress period, passi temporali, comando `calendar`), 5 (griglia DIS, superfici, layer, controlli geometrici, comando `grid`), 6 (parametri uniformi per unità, carichi iniziali costanti o da raster, comando `params`) e 7 (registro delle condizioni al contorno, WEL, CHD da stazioni, RCH, comando `bc`).
+**Stato attuale:** M1a in corso. Completati gli incrementi 1 (scheletro del repository, ambiente, CI), 2 (unità, errori, eventi JSON), 3 (formato del progetto, comandi `new`, `info`, `schema`, `migrate`) 4 (serie temporali, stress period, passi temporali, comando `calendar`), 5 (griglia DIS, superfici, layer, controlli geometrici, comando `grid`), 6 (parametri uniformi per unità, carichi iniziali costanti o da raster, comando `params`), 7 (registro delle condizioni al contorno, WEL, CHD da stazioni, RCH, comando `bc`) e 8 (registro dei controlli, ispezione per fasi con raccolta degli errori, comando `check`).
 
 ---
 
@@ -934,3 +942,4 @@ Regole:
 | 36 | 2026-11-03 | Griglia DIS con convenzioni MF6; superfici come media sulla cella della bilineare; copertura stretta; raster nel CRS del progetto; superfici incrociate come errore; DEM come avviso (ADR 0010) | Metodo esatto per superfici lineari a ogni rotazione; nessuna correzione silenziosa | Average di GDAL (impreciso su griglie ruotate); riproiezione automatica; troncamento degli spessori |
 | 37 | 2026-11-03 | Parametri uniformi per unità con unità di misura obbligatoria per K e Ss; Kh, Ss, Kv o Kv/Kh obbligatori, Sy solo per le unità convertibili; intervalli plausibili generali come avviso; carichi iniziali costanti o da raster, avviso solo sotto l'ultima cella attiva (ADR 0011) | Nessun default silenzioso su grandezze dimensionali; avvisi solo su condizioni anomale | Unità vuota come unità interna; Kv = Kh di default; intervalli per litologia prima di M8; avviso su ogni cella sotto la base |
 | 38 | 2026-11-03 | Registro `BoundaryConditionType`; intersezioni con shapely su celle chiuse; WEL ripartito per trasmissività dei tratti filtrati (anticipato da M3); CHD interpolato per progressiva con serie combinate sull'unione delle date, attivazione dell'intera linea, solo layer con base sotto il carico minimo, prima feature nelle sovrapposizioni; RCH alla cella attiva più alta con frazione d'area; moltiplicatori in AUXMULTNAME (ADR 0012) | Vincoli di MF6 verificati (CHD sotto la base e CHD doppi rifiutati, righe WEL/RCH multiple accettate); volumi e carichi esatti nel tempo | FloPy GridIntersect; carico costante nel periodo; stazione più vicina; CHD su tutti i layer; errore sulle sovrapposizioni CHD |
+| 39 | 2026-11-03 | Ispezione per fasi con dipendenze, errori raccolti per riga, unità e feature in `check` e primo errore negli altri comandi, registro `Check` con fasi richieste, controlli del modello (stazionario senza carichi imposti, pozzi in celle CHD, ordine di grandezza di portate e ricarica, Newton con unità convertibili) (ADR 0013) | Elenco completo degli errori in un solo passaggio; nessun risultato intermedio inventato | Arresto al primo errore; fasi eseguite con parametri provvisori; soglie per litologia prima di M2 e M8 |

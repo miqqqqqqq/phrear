@@ -19,7 +19,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Final
 
-from phrear.errors import FieldValue, Localized, ObjectRef, ParameterError, UnitError
+from phrear.errors import (
+    ErrorCollector,
+    FieldValue,
+    Localized,
+    ObjectRef,
+    ParameterError,
+    PhrearError,
+    UnitError,
+)
 from phrear.events import Problem
 from phrear.project import Project, gpkg
 from phrear.project.schema import PARAM_QUANTITIES, TABLES_BY_NAME
@@ -159,7 +167,7 @@ def _row_value(row: _Row, unit_label: str) -> ParamValue:
     )
 
 
-def _check(unit: UnitParameters) -> list[Problem]:
+def _check(unit: UnitParameters, errors: ErrorCollector) -> list[Problem]:
     warnings: list[Problem] = []
     for param, pv in unit.values.items():
         label = PARAM_LABELS[param]
@@ -170,13 +178,19 @@ def _check(unit: UnitParameters) -> list[Problem]:
         }
         value = _fmt(pv.original_value)
         if param in FRACTIONS and not 0.0 < pv.value < 1.0:
-            raise ParameterError(
-                "params.not_fraction", param=label, unit=unit.label, value=value, ref=pv.ref
+            errors.fail(
+                ParameterError(
+                    "params.not_fraction", param=label, unit=unit.label, value=value, ref=pv.ref
+                )
             )
+            continue
         if param not in FRACTIONS and pv.value <= 0.0:
-            raise ParameterError(
-                "params.not_positive", param=label, unit=unit.label, value=value, ref=pv.ref
+            errors.fail(
+                ParameterError(
+                    "params.not_positive", param=label, unit=unit.label, value=value, ref=pv.ref
+                )
             )
+            continue
         if (pv.minimum is not None and pv.original_value < pv.minimum) or (
             pv.maximum is not None and pv.original_value > pv.maximum
         ):
@@ -207,6 +221,8 @@ def _check(unit: UnitParameters) -> list[Problem]:
                     ref=pv.ref,
                 )
             )
+    if not {"kh", "kv"} <= unit.values.keys() and not {"kh", "anisotropy"} <= unit.values.keys():
+        return warnings
     if unit.kv > unit.kh * (1 + 1e-12):
         warnings.append(
             Problem.from_code(
@@ -216,8 +232,13 @@ def _check(unit: UnitParameters) -> list[Problem]:
     return warnings
 
 
-def load_parameters(project: Project) -> ParameterSet:
-    """Uniform parameters of every unit, validated and in internal units."""
+def load_parameters(project: Project, errors: ErrorCollector | None = None) -> ParameterSet:
+    """Uniform parameters of every unit, validated and in internal units.
+
+    With a collecting ``errors``, every row and unit is checked and the errors are
+    gathered; the returned set is then usable only if none was found.
+    """
+    errors = errors or ErrorCollector()
     with gpkg.connect(project.gpkg_path) as conn:
         units = conn.execute(
             'SELECT fid, position, name, param_mode, convertible FROM "hydro_units" '
@@ -232,19 +253,25 @@ def load_parameters(project: Project) -> ParameterSet:
     for *row, object_type in rows:
         fid, object_id = row[0], row[1]
         if object_type != "unit":
-            raise ParameterError(
-                "params.source_not_available",
-                param=PARAM_LABELS.get(row[2], Localized(str(row[2]), str(row[2]))),
-                unit=str(object_id),
-                what=Localized("una zona", "a zone"),
-                ref=ObjectRef(kind="field", layer="param_values", fid=fid, field="object_type"),
+            errors.fail(
+                ParameterError(
+                    "params.source_not_available",
+                    param=PARAM_LABELS.get(row[2], Localized(str(row[2]), str(row[2]))),
+                    unit=str(object_id),
+                    what=Localized("una zona", "a zone"),
+                    ref=ObjectRef(kind="field", layer="param_values", fid=fid, field="object_type"),
+                )
             )
+            continue
         if object_id not in unit_fids:
-            raise ParameterError(
-                "params.unknown_unit",
-                fid=object_id,
-                ref=ObjectRef(kind="field", layer="param_values", fid=fid, field="object_id"),
+            errors.fail(
+                ParameterError(
+                    "params.unknown_unit",
+                    fid=object_id,
+                    ref=ObjectRef(kind="field", layer="param_values", fid=fid, field="object_id"),
+                )
             )
+            continue
         by_unit.setdefault(object_id, []).append(tuple(row))
 
     result: list[UnitParameters] = []
@@ -253,28 +280,41 @@ def load_parameters(project: Project) -> ParameterSet:
         label = f"{position} ({name})"
         ref = ObjectRef(kind="field", layer="hydro_units", fid=fid, field="param_mode")
         if (mode or "uniform") != "uniform":
-            raise ParameterError("params.mode_not_available", unit=label, mode=str(mode), ref=ref)
-        values = {row[2]: _row_value(row, label) for row in by_unit.get(fid, [])}
+            errors.fail(
+                ParameterError("params.mode_not_available", unit=label, mode=str(mode), ref=ref)
+            )
+            continue
+        values: dict[str, ParamValue] = {}
+        failed: set[str] = set()
+        for row in by_unit.get(fid, []):
+            try:
+                values[row[2]] = _row_value(row, label)
+            except PhrearError as exc:
+                failed.add(row[2])
+                errors.fail(exc)
         is_convertible = True if convertible is None else bool(convertible)
+        unit_ref = ObjectRef(kind="table", layer="hydro_units", fid=fid)
         required = ["kh", "ss"] + (["sy"] if is_convertible else [])
         for param in required:
-            if param not in values:
-                raise ParameterError(
-                    "params.missing",
-                    param=PARAM_LABELS[param],
-                    unit=label,
-                    fid=fid,
-                    param_code=param,
-                    ref=ObjectRef(kind="table", layer="hydro_units", fid=fid),
+            if param not in values and param not in failed:
+                errors.fail(
+                    ParameterError(
+                        "params.missing",
+                        param=PARAM_LABELS[param],
+                        unit=label,
+                        fid=fid,
+                        param_code=param,
+                        ref=unit_ref,
+                    )
                 )
-        unit_ref = ObjectRef(kind="table", layer="hydro_units", fid=fid)
-        if "kv" not in values and "anisotropy" not in values:
-            raise ParameterError("params.kv_or_anisotropy", unit=label, ref=unit_ref)
-        if "kv" in values and "anisotropy" in values:
-            raise ParameterError(
-                "params.kv_and_anisotropy", unit=label, ref=values["anisotropy"].ref
+        vertical = {"kv", "anisotropy"}
+        if not (vertical & (values.keys() | failed)):
+            errors.fail(ParameterError("params.kv_or_anisotropy", unit=label, ref=unit_ref))
+        if vertical <= values.keys():
+            errors.fail(
+                ParameterError("params.kv_and_anisotropy", unit=label, ref=values["anisotropy"].ref)
             )
         unit = UnitParameters(fid, position, name, is_convertible, values)
-        warnings += _check(unit)
+        warnings += _check(unit, errors)
         result.append(unit)
     return ParameterSet(tuple(result), tuple(warnings))

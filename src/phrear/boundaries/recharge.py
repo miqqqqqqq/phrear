@@ -23,7 +23,7 @@ from phrear.boundaries.base import (
     PackageInput,
     layer_label,
 )
-from phrear.errors import BoundaryError, Localized, ObjectRef, UnitError
+from phrear.errors import BoundaryError, Localized, ObjectRef, PhrearError, UnitError
 from phrear.events import Problem
 from phrear.project.features import feature_label, fmt, number, text
 from phrear.units import PhysicalQuantity, conversion_factor
@@ -100,11 +100,15 @@ def build_recharge(ctx: BcContext) -> PackageInput:
         label = feature_label(row["name"], fid)
         ref = _ref(fid)
         polygon = row.geometry
-        if polygon is None or polygon.is_empty:
-            raise BoundaryError(
-                "bc.geometry_missing", feature=label, layer=layer_label(LAYER), ref=ref
-            )
-        forcing = _forcing(ctx, fid, label, row)
+        try:
+            if polygon is None or polygon.is_empty:
+                raise BoundaryError(
+                    "bc.geometry_missing", feature=label, layer=layer_label(LAYER), ref=ref
+                )
+            forcing = _forcing(ctx, fid, label, row)
+        except PhrearError as exc:
+            ctx.errors.fail(exc)
+            continue
         found = False
         for piece in ctx.cells.area_pieces(polygon):
             k = int(uppermost[piece.row, piece.col])
@@ -112,7 +116,9 @@ def build_recharge(ctx: BcContext) -> PackageInput:
                 continue
             found = True
             assignments.append(
-                Assignment((k, piece.row, piece.col), forcing, piece.fraction, f"rch_{fid}", ref)
+                Assignment(
+                    (k, piece.row, piece.col), forcing, piece.fraction, f"rch_{fid}", ref, label
+                )
             )
         if not found:
             warnings.append(Problem.from_code("bc.zone_outside", {"feature": label}, ref=ref))

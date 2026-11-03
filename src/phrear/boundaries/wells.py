@@ -23,7 +23,7 @@ from phrear.boundaries.base import (
     PackageInput,
     layer_label,
 )
-from phrear.errors import BoundaryError, Localized, ObjectRef, UnitError
+from phrear.errors import BoundaryError, Localized, ObjectRef, PhrearError, UnitError
 from phrear.events import Problem
 from phrear.project.features import feature_label, fmt, number, text
 from phrear.units import PhysicalQuantity, conversion_factor
@@ -118,62 +118,75 @@ def _forcing(ctx: BcContext, fid: int, label: str, row: Any) -> Forcing:
     return Forcing.of_constant(rate * factor)
 
 
-def build_wells(ctx: BcContext) -> PackageInput:
+def _well(ctx: BcContext, fid: int, row: Any) -> tuple[list[Assignment], list[Problem]]:
     grid = ctx.grid
+    label = feature_label(row["name"], fid)
+    ref = _ref(fid)
+    if (text(row["model_as"]) or "auto") == "maw":
+        raise BoundaryError("bc.maw_not_available", feature=label, ref=_ref(fid, "model_as"))
+    geom = row.geometry
+    if geom is None or geom.is_empty:
+        raise BoundaryError("bc.geometry_missing", feature=label, layer=layer_label(LAYER), ref=ref)
+    cell = ctx.cells.point_cell(geom.x, geom.y)
+    if cell is None or not ctx.active_columns[cell]:
+        raise BoundaryError("bc.outside_active", feature=label, layer=layer_label(LAYER), ref=ref)
+    r, c = cell
+    top, bottom = _screen(fid, label, row)
+    cell_tops = np.concatenate([[grid.top[r, c]], grid.botm[:-1, r, c]])
+    lengths = np.clip(
+        np.minimum(top, cell_tops) - np.maximum(bottom, grid.botm[:, r, c]), 0.0, None
+    )
+    lengths[grid.idomain[:, r, c] <= 0] = 0.0
+    transmissivity = ctx.layers.k[:, r, c] * lengths
+    total = float(transmissivity.sum())
+    if total <= 0.0:
+        raise BoundaryError(
+            "bc.screen_outside",
+            feature=label,
+            top=fmt(top),
+            bottom=fmt(bottom),
+            row=r + 1,
+            col=c + 1,
+            ref=ref,
+        )
+    warnings: list[Problem] = []
+    inside = float(lengths.sum())
+    if (top - bottom) - inside > _TOL:
+        warnings.append(
+            Problem.from_code(
+                "bc.screen_clipped",
+                {"feature": label, "length": fmt(top - bottom), "inside": fmt(inside)},
+                ref=ref,
+            )
+        )
+    forcing = _forcing(ctx, fid, label, row)
+    sign = 1.0 if text(row["role"]) == "injection" else -1.0
+    assignments = [
+        Assignment(
+            (int(k), r, c),
+            forcing,
+            sign * float(transmissivity[k]) / total,
+            f"well_{fid}",
+            ref,
+            label,
+        )
+        for k in np.flatnonzero(transmissivity > 0.0)
+    ]
+    return assignments, warnings
+
+
+def build_wells(ctx: BcContext) -> PackageInput:
     frame = ctx.features(LAYER)
     assignments: list[Assignment] = []
     warnings: list[Problem] = []
     for fid, row in frame.iterrows():
-        fid = int(fid)
-        label = feature_label(row["name"], fid)
-        ref = _ref(fid)
-        if (text(row["model_as"]) or "auto") == "maw":
-            raise BoundaryError("bc.maw_not_available", feature=label, ref=_ref(fid, "model_as"))
-        geom = row.geometry
-        if geom is None or geom.is_empty:
-            raise BoundaryError(
-                "bc.geometry_missing", feature=label, layer=layer_label(LAYER), ref=ref
-            )
-        cell = ctx.cells.point_cell(geom.x, geom.y)
-        if cell is None or not ctx.active_columns[cell]:
-            raise BoundaryError(
-                "bc.outside_active", feature=label, layer=layer_label(LAYER), ref=ref
-            )
-        r, c = cell
-        top, bottom = _screen(fid, label, row)
-        cell_tops = np.concatenate([[grid.top[r, c]], grid.botm[:-1, r, c]])
-        lengths = np.clip(
-            np.minimum(top, cell_tops) - np.maximum(bottom, grid.botm[:, r, c]), 0.0, None
-        )
-        lengths[grid.idomain[:, r, c] <= 0] = 0.0
-        transmissivity = ctx.layers.k[:, r, c] * lengths
-        total = float(transmissivity.sum())
-        if total <= 0.0:
-            raise BoundaryError(
-                "bc.screen_outside",
-                feature=label,
-                top=fmt(top),
-                bottom=fmt(bottom),
-                row=r + 1,
-                col=c + 1,
-                ref=ref,
-            )
-        inside = float(lengths.sum())
-        if (top - bottom) - inside > _TOL:
-            warnings.append(
-                Problem.from_code(
-                    "bc.screen_clipped",
-                    {"feature": label, "length": fmt(top - bottom), "inside": fmt(inside)},
-                    ref=ref,
-                )
-            )
-        forcing = _forcing(ctx, fid, label, row)
-        sign = 1.0 if text(row["role"]) == "injection" else -1.0
-        for k in np.flatnonzero(transmissivity > 0.0):
-            share = float(transmissivity[k]) / total
-            assignments.append(
-                Assignment((int(k), r, c), forcing, sign * share, f"well_{fid}", ref)
-            )
+        try:
+            found, notes = _well(ctx, int(fid), row)
+        except PhrearError as exc:
+            ctx.errors.fail(exc)
+            continue
+        assignments += found
+        warnings += notes
     return PackageInput("wel", "wel", tuple(assignments), tuple(warnings), len(frame))
 
 

@@ -26,7 +26,7 @@ import geopandas as gpd
 import numpy as np
 
 from phrear.boundaries.geometry import CellIndex
-from phrear.errors import BoundaryError, Localized, ObjectRef
+from phrear.errors import BoundaryError, ErrorCollector, Localized, ObjectRef
 from phrear.events import Problem
 from phrear.grid.model_grid import ModelGrid
 from phrear.params.layers import LayerParameters
@@ -87,6 +87,8 @@ class Assignment:
     boundname: str
     ref: ObjectRef
     """The feature that produced the assignment."""
+    label: str = ""
+    """How the feature is named in messages."""
 
 
 @dataclass(frozen=True)
@@ -158,6 +160,8 @@ class BcContext:
     grid: ModelGrid
     layers: LayerParameters
     timeline: Timeline
+    errors: ErrorCollector = field(default_factory=ErrorCollector)
+    """Raises the first error, or gathers one per feature for ``check``."""
 
     @cached_property
     def cells(self) -> CellIndex:

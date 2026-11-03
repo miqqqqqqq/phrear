@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from phrear.boundaries import fixed_heads, recharge, wells
 from phrear.boundaries.base import BcContext, BoundaryConditionType, PackageInput
+from phrear.errors import ErrorCollector
 from phrear.events import Problem
 from phrear.grid.model_grid import ModelGrid
 from phrear.params.layers import LayerParameters
@@ -41,7 +42,18 @@ class Boundaries:
 
 
 def build_boundaries(
-    project: Project, grid: ModelGrid, layers: LayerParameters, timeline: Timeline
+    project: Project,
+    grid: ModelGrid,
+    layers: LayerParameters,
+    timeline: Timeline,
+    errors: ErrorCollector | None = None,
 ) -> Boundaries:
-    ctx = BcContext(project=project, grid=grid, layers=layers, timeline=timeline)
+    """Boundaries of the base model; ``errors`` may gather one error per feature."""
+    ctx = BcContext(
+        project=project,
+        grid=grid,
+        layers=layers,
+        timeline=timeline,
+        errors=errors or ErrorCollector(),
+    )
     return Boundaries(tuple(t.build(ctx) for t in BOUNDARY_TYPES.values()))

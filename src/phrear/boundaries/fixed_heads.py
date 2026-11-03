@@ -25,6 +25,7 @@ from __future__ import annotations
 import bisect
 import dataclasses
 import itertools
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -40,7 +41,7 @@ from phrear.boundaries.base import (
     PackageInput,
     layer_label,
 )
-from phrear.errors import BoundaryError, Localized, ObjectRef
+from phrear.errors import BoundaryError, Localized, ObjectRef, PhrearError
 from phrear.events import Problem
 from phrear.project import gpkg
 from phrear.project.features import feature_label, fmt, number, text
@@ -90,13 +91,16 @@ def _station_groups(ctx: BcContext) -> dict[tuple[str, int], list[tuple[int, Any
         layer = text(row["feature_layer"])
         feature_id = number(row["feature_id"])
         if layer not in existing or feature_id is None or int(feature_id) not in existing[layer]:
-            raise BoundaryError(
-                "bc.station_unknown_feature",
-                station=feature_label(row["name"], fid),
-                feature_id=str(feature_id if feature_id is None else int(feature_id)),
-                feature_layer=str(layer),
-                ref=_ref(STATIONS, fid, "feature_id"),
+            ctx.errors.fail(
+                BoundaryError(
+                    "bc.station_unknown_feature",
+                    station=feature_label(row["name"], fid),
+                    feature_id=str(feature_id if feature_id is None else int(feature_id)),
+                    feature_layer=str(layer),
+                    ref=_ref(STATIONS, fid, "feature_id"),
+                )
             )
+            continue
         groups.setdefault((layer, int(feature_id)), []).append((fid, row))
     return groups
 
@@ -314,123 +318,124 @@ def _geometry(layer: str, fid: int, label: str, row: Any) -> shapely.Geometry:
     return geom
 
 
-def _lines(
-    ctx: BcContext, groups: dict[tuple[str, int], list[tuple[int, Any]]]
-) -> tuple[list[_Candidate], list[Problem], int]:
+Groups = dict[tuple[str, int], list[tuple[int, Any]]]
+Built = tuple[list[_Candidate], list[Problem]]
+
+
+def _line(ctx: BcContext, groups: Groups, fid: int, row: Any) -> Built:
+    label = feature_label(row["name"], fid)
+    ref = _ref(LINES, fid)
+    parts = shapely.get_parts(shapely.line_merge(_geometry(LINES, fid, label, row)))
+    if len(parts) != 1:
+        raise BoundaryError("bc.multipart_line", feature=label, n=len(parts), ref=ref)
+    line = parts[0]
+    rows = groups.get((LINES, fid))
+    if not rows:
+        raise BoundaryError(
+            "bc.no_stations",
+            feature=label,
+            layer=layer_label(LINES),
+            layer_code=LINES,
+            fid=fid,
+            ref=ref,
+        )
+    stations, warnings = _stations_of_line(ctx, line, label, rows)
+    column = _Column(ctx, _unit_layers(ctx, LINES, fid, label, row))
+    boundname = f"{_PREFIX[LINES]}_{fid}"
     candidates: list[_Candidate] = []
-    warnings: list[Problem] = []
-    frame = ctx.features(LINES)
-    for fid, row in frame.iterrows():
-        fid = int(fid)
-        label = feature_label(row["name"], fid)
-        ref = _ref(LINES, fid)
-        parts = shapely.get_parts(shapely.line_merge(_geometry(LINES, fid, label, row)))
-        if len(parts) != 1:
-            raise BoundaryError("bc.multipart_line", feature=label, n=len(parts), ref=ref)
-        line = parts[0]
-        rows = groups.get((LINES, fid))
-        if not rows:
-            raise BoundaryError(
-                "bc.no_stations",
-                feature=label,
-                layer=layer_label(LINES),
-                layer_code=LINES,
-                fid=fid,
+    used: list[int] = []
+    for piece in ctx.cells.line_pieces(line):
+        series_id = f"{boundname}@{piece.row + 1}_{piece.col + 1}"
+        forcing = align(interpolate(stations, piece.chainage, series_id, ctx.calendar), stations)
+        layers = column.layers_for(piece.row, piece.col, forcing, label, ref)
+        if layers is None:
+            continue
+        used.append(piece.row * ctx.grid.geometry.ncol + piece.col)
+        candidates += [
+            _Candidate((k, piece.row, piece.col), forcing, boundname, label, ref) for k in layers
+        ]
+    if not used:
+        raise BoundaryError("bc.outside_active", feature=label, layer=layer_label(LINES), ref=ref)
+    outside = float(line.difference(shapely.union_all(ctx.cells.polygons[used])).length)
+    if outside > _EPS * max(1.0, float(line.length)):
+        warnings.append(
+            Problem.from_code(
+                "bc.line_outside",
+                {"feature": label, "length": fmt(float(line.length)), "outside": fmt(outside)},
                 ref=ref,
             )
-        stations, station_warnings = _stations_of_line(ctx, line, label, rows)
-        warnings += station_warnings
-        column = _Column(ctx, _unit_layers(ctx, LINES, fid, label, row))
-        boundname = f"{_PREFIX[LINES]}_{fid}"
-        used: list[int] = []
-        for piece in ctx.cells.line_pieces(line):
-            series_id = f"{boundname}@{piece.row + 1}_{piece.col + 1}"
-            forcing = align(
-                interpolate(stations, piece.chainage, series_id, ctx.calendar), stations
-            )
-            layers = column.layers_for(piece.row, piece.col, forcing, label, ref)
-            if layers is None:
-                continue
-            used.append(piece.row * ctx.grid.geometry.ncol + piece.col)
-            candidates += [
-                _Candidate((k, piece.row, piece.col), forcing, boundname, label, ref)
-                for k in layers
-            ]
-        if not used:
-            raise BoundaryError(
-                "bc.outside_active", feature=label, layer=layer_label(LINES), ref=ref
-            )
-        outside = float(line.difference(shapely.union_all(ctx.cells.polygons[used])).length)
-        if outside > _EPS * max(1.0, float(line.length)):
-            warnings.append(
-                Problem.from_code(
-                    "bc.line_outside",
-                    {"feature": label, "length": fmt(float(line.length)), "outside": fmt(outside)},
-                    ref=ref,
-                )
-            )
-        if (w := column.warning(label, ref)) is not None:
-            warnings.append(w)
-    return candidates, warnings, len(frame)
+        )
+    if (w := column.warning(label, ref)) is not None:
+        warnings.append(w)
+    return candidates, warnings
 
 
-def _areas(
-    ctx: BcContext, groups: dict[tuple[str, int], list[tuple[int, Any]]]
-) -> tuple[list[_Candidate], list[Problem], int]:
-    candidates: list[_Candidate] = []
-    warnings: list[Problem] = []
+def _area(ctx: BcContext, groups: Groups, fid: int, row: Any) -> Built:
     settings = ctx.project.config.grid
-    frame = ctx.features(AREAS)
+    label = feature_label(row["name"], fid)
+    ref = _ref(AREAS, fid)
+    polygon = _geometry(AREAS, fid, label, row)
+    rows = groups.get((AREAS, fid), [])
+    if not rows:
+        raise BoundaryError(
+            "bc.no_stations",
+            feature=label,
+            layer=layer_label(AREAS),
+            layer_code=AREAS,
+            fid=fid,
+            ref=ref,
+        )
+    if len(rows) > 1:
+        raise BoundaryError("bc.area_stations", feature=label, n=len(rows), ref=ref)
+    sfid, srow = rows[0]
+    forcing = _station_forcing(ctx, sfid, feature_label(srow["name"], sfid), srow)
+    column = _Column(ctx, _unit_layers(ctx, AREAS, fid, label, row))
+    boundname = f"{_PREFIX[AREAS]}_{fid}"
+    candidates: list[_Candidate] = []
+    for piece in ctx.cells.area_pieces(polygon):
+        if settings.activation == "area":
+            selected = piece.fraction >= settings.min_area_fraction
+        else:
+            selected = piece.centroid_inside
+        if not selected:
+            continue
+        layers = column.layers_for(piece.row, piece.col, forcing, label, ref)
+        if layers is None:
+            continue
+        candidates += [
+            _Candidate((k, piece.row, piece.col), forcing, boundname, label, ref) for k in layers
+        ]
+    if not candidates:
+        raise BoundaryError("bc.outside_active", feature=label, layer=layer_label(AREAS), ref=ref)
+    warning = column.warning(label, ref)
+    return candidates, [] if warning is None else [warning]
+
+
+def _features(
+    ctx: BcContext,
+    layer: str,
+    groups: Groups,
+    build: Callable[[BcContext, Groups, int, Any], Built],
+) -> tuple[list[_Candidate], list[Problem], int]:
+    """Candidates of every feature of ``layer``, one error per feature."""
+    candidates: list[_Candidate] = []
+    warnings: list[Problem] = []
+    frame = ctx.features(layer)
     for fid, row in frame.iterrows():
-        fid = int(fid)
-        label = feature_label(row["name"], fid)
-        ref = _ref(AREAS, fid)
-        polygon = _geometry(AREAS, fid, label, row)
-        rows = groups.get((AREAS, fid), [])
-        if not rows:
-            raise BoundaryError(
-                "bc.no_stations",
-                feature=label,
-                layer=layer_label(AREAS),
-                layer_code=AREAS,
-                fid=fid,
-                ref=ref,
-            )
-        if len(rows) > 1:
-            raise BoundaryError("bc.area_stations", feature=label, n=len(rows), ref=ref)
-        sfid, srow = rows[0]
-        forcing = _station_forcing(ctx, sfid, feature_label(srow["name"], sfid), srow)
-        column = _Column(ctx, _unit_layers(ctx, AREAS, fid, label, row))
-        boundname = f"{_PREFIX[AREAS]}_{fid}"
-        found = False
-        for piece in ctx.cells.area_pieces(polygon):
-            if settings.activation == "area":
-                selected = piece.fraction >= settings.min_area_fraction
-            else:
-                selected = piece.centroid_inside
-            if not selected:
-                continue
-            layers = column.layers_for(piece.row, piece.col, forcing, label, ref)
-            if layers is None:
-                continue
-            found = True
-            candidates += [
-                _Candidate((k, piece.row, piece.col), forcing, boundname, label, ref)
-                for k in layers
-            ]
-        if not found:
-            raise BoundaryError(
-                "bc.outside_active", feature=label, layer=layer_label(AREAS), ref=ref
-            )
-        if (w := column.warning(label, ref)) is not None:
-            warnings.append(w)
+        try:
+            found, notes = build(ctx, groups, int(fid), row)
+        except PhrearError as exc:
+            ctx.errors.fail(exc)
+            continue
+        candidates += found
+        warnings += notes
     return candidates, warnings, len(frame)
 
 
 def build_fixed_heads(ctx: BcContext) -> PackageInput:
     groups = _station_groups(ctx)
-    lines, line_warnings, n_lines = _lines(ctx, groups)
-    areas, area_warnings, n_areas = _areas(ctx, groups)
+    lines, line_warnings, n_lines = _features(ctx, LINES, groups, _line)
+    areas, area_warnings, n_areas = _features(ctx, AREAS, groups, _area)
     taken: dict[Cell, _Candidate] = {}
     clashes: list[tuple[_Candidate, _Candidate]] = []
     for candidate in lines + areas:
@@ -458,7 +463,7 @@ def build_fixed_heads(ctx: BcContext) -> PackageInput:
             )
         )
     assignments = tuple(
-        Assignment(c.cell, c.forcing, 1.0, c.boundname, c.ref) for c in taken.values()
+        Assignment(c.cell, c.forcing, 1.0, c.boundname, c.ref, c.label) for c in taken.values()
     )
     return PackageInput("chd", "chd", assignments, tuple(warnings), n_lines + n_areas)
 

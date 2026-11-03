@@ -627,6 +627,66 @@ CATALOG: dict[str, Message] = {
         hint_it="Correggi i contorni se la sovrapposizione non è voluta.",
         hint_en="Fix the outlines if the overlap is not intended.",
     ),
+    "check.failed": Message(
+        it="Il controllo ha trovato {errors}.",
+        en="The check found {errors}.",
+        hint_it="Correggi gli errori elencati e ripeti phrear check.",
+        hint_en="Fix the errors listed and run phrear check again.",
+    ),
+    "check.no_fixed_head": Message(
+        it="Il periodo stazionario iniziale non ha carichi imposti attivi; senza un carico di "
+        "riferimento la soluzione stazionaria non è determinata.",
+        en="The initial steady period has no active fixed heads; without a reference head "
+        "the steady-state solution is undetermined.",
+        hint_it="Aggiungi una linea o un'area a carico imposto attiva dalla data di inizio, "
+        "oppure imposta model.steady_initial = false.",
+        hint_en="Add a fixed head line or area active from the start date, or set "
+        "model.steady_initial = false.",
+    ),
+    "check.well_in_fixed_head": Message(
+        it="Il pozzo {feature} preleva da {n_cells} celle a carico imposto, per esempio layer "
+        "{layer}, riga {row}, colonna {col}; lì il carico non cambia e la portata arriva "
+        "dal contorno.",
+        en="Well {feature} draws from {n_cells} fixed head cells, for example layer {layer}, "
+        "row {row}, column {col}; there the head does not change and the rate comes from "
+        "the boundary.",
+        hint_it="Sposta il pozzo o il carico imposto, oppure limita le unità del carico "
+        "imposto con top_unit e bottom_unit.",
+        hint_en="Move the well or the fixed head, or restrict the units of the fixed head "
+        "with top_unit and bottom_unit.",
+    ),
+    "check.well_rate_high": Message(
+        it="La portata del pozzo {feature} arriva a {value} l/s, oltre {limit} l/s.",
+        en="The rate of well {feature} reaches {value} l/s, above {limit} l/s.",
+        hint_it="Controlla valore e unità di misura; per esempio m³/d inseriti come l/s "
+        "danno una portata 86,4 volte più grande.",
+        hint_en="Check value and unit; for example m3/d entered as l/s give a rate 86.4 "
+        "times larger.",
+    ),
+    "check.recharge_high": Message(
+        it="La ricarica della zona {feature} arriva a {value} mm/anno, oltre {limit} mm/anno.",
+        en="The recharge of zone {feature} reaches {value} mm/year, above {limit} mm/year.",
+        hint_it="Controlla valore e unità di misura; per esempio mm/giorno inseriti come "
+        "mm/anno danno una ricarica 365 volte più piccola, l'inverso 365 volte più grande.",
+        hint_en="Check value and unit; for example mm/day entered as mm/year give a recharge "
+        "365 times smaller, the reverse 365 times larger.",
+    ),
+    "check.recharge_low": Message(
+        it="La ricarica della zona {feature} scende a {value} mm/anno, sotto {limit} mm/anno "
+        "senza essere nulla.",
+        en="The recharge of zone {feature} drops to {value} mm/year, below {limit} mm/year "
+        "without being zero.",
+        hint_it="Controlla valore e unità di misura, per esempio m/anno inseriti come mm/anno.",
+        hint_en="Check value and unit, for example m/year entered as mm/year.",
+    ),
+    "check.newton_off": Message(
+        it="La formulazione di Newton è disattivata e le unità {units} sono convertibili; le "
+        "celle che si asciugano diventano inattive e la ricarica su di esse si perde.",
+        en="The Newton formulation is off and units {units} are convertible; cells that dry "
+        "out become inactive and the recharge on them is lost.",
+        hint_it="Imposta options.newton = true, salvo motivi specifici.",
+        hint_en="Set options.newton = true unless there are specific reasons.",
+    ),
     "init.missing": Message(
         it="Mancano i carichi iniziali.",
         en="The initial heads are missing.",
@@ -778,6 +838,29 @@ class BoundaryError(PhrearError):
     """Boundary condition features that cannot be turned into model input."""
 
     prefix = "bc."
+
+
+class CheckError(PhrearError):
+    """Outcome of a check that found blocking errors."""
+
+    prefix = "check."
+
+
+class ErrorCollector:
+    """Raises each error at once (default) or gathers them.
+
+    Loaders call :meth:`fail` for every error tied to one object, so that a check
+    can report all of them in a single pass instead of stopping at the first.
+    """
+
+    def __init__(self, *, collect: bool = False) -> None:
+        self.collect = collect
+        self.errors: list[PhrearError] = []
+
+    def fail(self, error: PhrearError) -> None:
+        if not self.collect:
+            raise error
+        self.errors.append(error)
 
 
 class InternalError(PhrearError):
