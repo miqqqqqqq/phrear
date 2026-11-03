@@ -33,3 +33,21 @@ def test_core_sources_do_not_import_qt_or_qgis() -> None:
 
 def test_scan_covers_core_sources() -> None:
     assert (CORE_DIR / "cli.py").is_file()
+
+
+def _print_calls(path: Path) -> int:
+    tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+    return sum(
+        isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "print"
+        for node in ast.walk(tree)
+    )
+
+
+def test_core_does_not_print() -> None:
+    """No print in the core (section 22); only the CLI writes to the console."""
+    offenders = {
+        str(path.relative_to(CORE_DIR)): n
+        for path in CORE_DIR.rglob("*.py")
+        if path.name != "cli.py" and (n := _print_calls(path))
+    }
+    assert offenders == {}

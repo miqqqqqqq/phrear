@@ -8,6 +8,8 @@ Ogni decisione presa durante lo sviluppo ha un file numerato in questa cartella 
 | [0002](0002-cli-argparse.md) | CLI con argparse | accettata | 30 |
 | [0003](0003-windows-github.md) | Piattaforma Windows, hosting e CI su GitHub | accettata | 27, 28 |
 | [0004](0004-dipendenze-iniziali.md) | Dipendenze iniziali e loro licenze | accettata | – |
+| [0005](0005-unita-interne.md) | Unità interne e convenzioni sulle unità | accettata | 31 |
+| [0006](0006-protocollo-eventi.md) | Protocollo degli eventi, errori e codici di uscita | accettata | 32 |
 
 ## Modello
 

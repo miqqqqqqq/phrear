@@ -167,7 +167,7 @@ QGIS 4 + plugin ──(CLI + eventi JSON)──> core phrear ──> MODFLOW 6 (
                                viewer 3D ────┘ (legge i risultati)
 ```
 
-Comandi CLI minimi: `new`, `check`, `grid`, `build`, `run`, `results`, `export`, `migrate`, `info`, `schema`, `import`, `scenario`, `verify`. Ogni comando accetta l'opzione `--json` per produrre l'output come eventi. Il comando `verify` esegue i test di verifica sull'installazione dell'utente e produce il report di affidabilità (sezione 20).
+Comandi CLI minimi: `new`, `check`, `grid`, `build`, `run`, `results`, `export`, `migrate`, `info`, `schema`, `import`, `scenario`, `verify`. Ogni comando accetta l'opzione `--json` per produrre l'output come eventi. Il comando `verify` esegue i test di verifica sull'installazione dell'utente e produce il report di affidabilità (sezione 20). Codici di uscita: 0 successo, 1 errore nell'input o nel progetto, 2 riga di comando non valida, 3 errore interno (ADR 0006).
 
 ---
 
@@ -502,7 +502,7 @@ Solo gli errori bloccano il run. Gli avvisi restano registrati nel log del run.
   - impostazioni del run;
   - data e ora.
 - **Esecuzione e istantanee.** Il run usa modflowapi con libmf6. Una callback a fine timestep emette gli eventi. Ogni N timestep (configurabile) scrive un'istantanea dei carichi per il monitor. Ogni istantanea è un file nuovo, mai modificato dopo la scrittura, perché su Windows un NetCDF aperto in QGIS resta bloccato (lock HDF5).
-- **Eventi JSON.** Uno per riga, con campo `schema` versionato:
+- **Eventi JSON.** Uno per riga in UTF-8, con campo `schema` versionato (ADR 0006). Ogni comando emette `command_started`, `progress`, `command_completed` o `command_failed`. Gli eventi del run sono:
   - `run_started`, `period_started`;
   - `timestep_completed`, con periodo, passo, tempo simulato, iterazioni, massima variazione di carico ed errore di bilancio percentuale;
   - `snapshot_written`, `warning`, `error`, `flow_reduced` (pozzo con portata effettiva inferiore a quella di progetto);
@@ -822,7 +822,7 @@ Regole:
 
 **Accettazione:** superfici interpolate con incertezza su un caso reale, confrontate con i raster esistenti.
 
-**Stato attuale:** M1a in corso. Incremento 1 (scheletro del repository, ambiente, CI) completato.
+**Stato attuale:** M1a in corso. Completati l'incremento 1 (scheletro del repository, ambiente, CI) e l'incremento 2 (unità, errori, eventi JSON).
 
 ---
 
@@ -903,3 +903,5 @@ Regole:
 | 28 | 2026-11-03 | Per ora solo Windows; Linux solo per lo sviluppo (ADR 0003) | Piattaforma degli utenti target | Windows e Linux supportati da subito |
 | 29 | 2026-11-03 | pixi con lockfile, Python 3.12, MF6 6.8.1 da conda-forge (ADR 0001) | Versioni bloccate inclusi gli eseguibili; GDAL e PROJ affidabili su Windows | conda con environment.yml, pip con venv, get-modflow |
 | 30 | 2026-11-03 | CLI con argparse (ADR 0002) | Nessuna dipendenza; controllo diretto di stdout per gli eventi JSON | click, typer |
+| 31 | 2026-11-03 | Unità interne per grandezza, anno giuliano di 365,25 d (ADR 0005) | Conversioni esplicite e tracciabili; default di pint | Anno di 365 d; solo sintassi nativa di pint |
+| 32 | 2026-11-03 | Eventi JSON Lines UTF-8 su stdout binario, messaggi IT/EN, codici di uscita 0–3 (ADR 0006) | Indipendenza dalla codifica della console Windows; il plugin sceglie la lingua | Testo libero; una sola lingua; PYTHONIOENCODING |
