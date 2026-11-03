@@ -9,6 +9,7 @@ from phrear.commands import (
     results_commands,
     run_commands,
     time_commands,
+    verify_commands,
 )
 from phrear.commands.base import CommandSpec, Configure, Context, Handler
 
@@ -22,6 +23,7 @@ COMMANDS: list[CommandSpec] = [
     *check_commands.COMMANDS,
     *run_commands.COMMANDS,
     *results_commands.COMMANDS,
+    *verify_commands.COMMANDS,
 ]
 
 __all__ = ["COMMANDS", "CommandSpec", "Configure", "Context", "Handler"]

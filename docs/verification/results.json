@@ -1,0 +1,90 @@
+{
+  "created": "2026-11-03T20:34:56+01:00",
+  "software": {
+    "name": "phrear",
+    "version": "0.1.0.dev0"
+  },
+  "engine": {
+    "name": "MODFLOW 6",
+    "version": "6.8.1"
+  },
+  "cases": [
+    {
+      "name": "flow_1d",
+      "title": {
+        "it": "Flusso monodimensionale con ricarica",
+        "en": "One-dimensional flow with recharge"
+      },
+      "relative": false,
+      "tolerance": 0.0001,
+      "max_error_m": 2.8937978900245298e-05,
+      "reference_m": 1.0,
+      "measure": 2.8937978900245298e-05,
+      "passed": true,
+      "points": 98,
+      "duration_s": 0.59,
+      "parameters": {
+        "cella": "10 m",
+        "celle": "100 × 10"
+      }
+    },
+    {
+      "name": "thiem",
+      "title": {
+        "it": "Thiem: pozzo in falda confinata, stazionario",
+        "en": "Thiem: confined steady well"
+      },
+      "relative": true,
+      "tolerance": 0.01,
+      "max_error_m": 0.012601562036857583,
+      "reference_m": 2.706586878613719,
+      "measure": 0.004655886768841483,
+      "passed": true,
+      "points": 25412,
+      "duration_s": 2.62,
+      "parameters": {
+        "cella": "10 m",
+        "celle": "201 × 201"
+      }
+    },
+    {
+      "name": "theis",
+      "title": {
+        "it": "Theis: pozzo in falda confinata, transitorio",
+        "en": "Theis: confined transient well"
+      },
+      "relative": true,
+      "tolerance": 0.03,
+      "max_error_m": 0.021391365860369937,
+      "reference_m": 1.9221767796432758,
+      "measure": 0.011128719318074283,
+      "passed": true,
+      "points": 258060,
+      "duration_s": 5.38,
+      "parameters": {
+        "cella": "20 m",
+        "celle": "201 × 201",
+        "primo passo": "0,001 d"
+      }
+    },
+    {
+      "name": "dupuit",
+      "title": {
+        "it": "Dupuit: pozzo in falda freatica, stazionario",
+        "en": "Dupuit: unconfined steady well"
+      },
+      "relative": true,
+      "tolerance": 0.03,
+      "max_error_m": 0.005581253333570402,
+      "reference_m": 1.4024662272728854,
+      "measure": 0.003979599098384867,
+      "passed": true,
+      "points": 25412,
+      "duration_s": 2.75,
+      "parameters": {
+        "cella": "10 m",
+        "celle": "201 × 201"
+      }
+    }
+  ]
+}

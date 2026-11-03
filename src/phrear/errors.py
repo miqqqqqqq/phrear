@@ -761,6 +761,26 @@ CATALOG: dict[str, Message] = {
         hint_it="Rimuovi il layer da QGIS, o chiudi il programma che lo usa, e ripeti l'export.",
         hint_en="Remove the layer from QGIS, or close the program using it, and export again.",
     ),
+    "verify.unknown_case": Message(
+        it="Il caso di verifica «{case}» non esiste; i casi sono {cases}.",
+        en="Verification case '{case}' does not exist; the cases are {cases}.",
+        hint_it="Indica uno dei casi elencati con --case, oppure nessuno per eseguirli tutti.",
+        hint_en="Give one of the listed cases with --case, or none to run them all.",
+    ),
+    "verify.output_exists": Message(
+        it="La cartella {path} esiste e non è vuota.",
+        en="Folder {path} exists and is not empty.",
+        hint_it="Indica con --output una cartella nuova o vuota per il report.",
+        hint_en="Give a new or empty folder for the report with --output.",
+    ),
+    "verify.failed": Message(
+        it="La verifica non è superata per {cases}.",
+        en="The verification fails for {cases}.",
+        hint_it="Il report in {report} riporta errori e grafici; con MF6 {engine} i casi "
+        "devono passare, quindi l'esito indica un problema dell'installazione o del software.",
+        hint_en="The report in {report} gives errors and plots; with MF6 {engine} the cases "
+        "must pass, so the outcome points to a problem of the installation or the software.",
+    ),
     "init.missing": Message(
         it="Mancano i carichi iniziali.",
         en="The initial heads are missing.",
@@ -930,6 +950,12 @@ class ResultsError(PhrearError):
     """Results of a run that cannot be read or exported."""
 
     prefix = "results."
+
+
+class VerificationError(PhrearError):
+    """Verification against analytical solutions not passed or not runnable."""
+
+    prefix = "verify."
 
 
 class ErrorCollector:
