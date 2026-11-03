@@ -19,3 +19,4 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versio
 - Commands `new`, `info`, `schema` (data schema and event protocol as JSON) and `migrate`; `result` event.
 - Time discretisation (ADR 0009): time series with exact values and averages, stress periods at regime changes, merge of short periods, automatic time steps, steady-state values, MF6 time series records; `[time]` settings; command `calendar`.
 - Engine test: MF6 well volumes equal the exact integral of stepwise and linear series.
+- Geometry and grid (ADR 0010): rotated DIS grid with MF6 conventions, active cells by centroid or area fraction, contact surfaces sampled as cell means of the bilinear interpolant, checks on crossing surfaces, coverage, raster CRS, DEM, thin units and isolated cells, layering with sublayers and vertical pass-through cells; command `grid` with GeoPackage export of the cells.

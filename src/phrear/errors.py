@@ -201,6 +201,131 @@ CATALOG: dict[str, Message] = {
         hint_it="Aumenta time.dt_initial_d o time.dt_max_d in project.toml.",
         hint_en="Increase time.dt_initial_d or time.dt_max_d in project.toml.",
     ),
+    "grid.cell_size_missing": Message(
+        it="Manca la dimensione delle celle della griglia.",
+        en="The grid cell size is missing.",
+        hint_it="Indica grid.cell_size_m in project.toml, in metri.",
+        hint_en="Set grid.cell_size_m in project.toml, in metres.",
+    ),
+    "grid.type_not_available": Message(
+        it="La griglia di tipo {grid_type} non è ancora disponibile.",
+        en="Grid type {grid_type} is not available yet.",
+        hint_it='Per ora usa grid.type = "dis"; le griglie DISV arrivano con M4.',
+        hint_en='Use grid.type = "dis" for now; DISV grids come with M4.',
+    ),
+    "grid.isolated_cells": Message(
+        it="{n_cells} celle attive non sono collegate a nessun'altra cella attiva, per "
+        "esempio layer {layer}, riga {row}, colonna {col}.",
+        en="{n_cells} active cells are not connected to any other active cell, for example "
+        "layer {layer}, row {row}, column {col}.",
+        hint_it="Controlla il dominio e gli spessori delle unità in quella zona.",
+        hint_en="Check the domain and the unit thicknesses in that area.",
+    ),
+    "grid.many_cells": Message(
+        it="La griglia ha {n_cells} celle, oltre la soglia di {limit}.",
+        en="The grid has {n_cells} cells, above the threshold of {limit}.",
+        hint_it="Aumenta grid.cell_size_m oppure alza grid.max_cells_warning se è voluto.",
+        hint_en="Increase grid.cell_size_m or raise grid.max_cells_warning if intended.",
+    ),
+    "geometry.no_domain": Message(
+        it="Il layer domain non contiene un dominio attivo del modello base.",
+        en="The domain layer has no active domain of the base model.",
+        hint_it="Disegna o importa il contorno del modello nel layer domain.",
+        hint_en="Draw or import the model outline in the domain layer.",
+    ),
+    "geometry.domain_invalid": Message(
+        it="La geometria del dominio non è valida. {reason}",
+        en="The domain geometry is not valid. {reason}",
+        hint_it="Correggila in QGIS, per esempio con «Correggi geometrie».",
+        hint_en="Fix it in QGIS, for example with 'Fix geometries'.",
+    ),
+    "geometry.no_units": Message(
+        it="Non ci sono unità idrostratigrafiche.",
+        en="There are no hydrostratigraphic units.",
+        hint_it="Aggiungi almeno un'unità nella tabella hydro_units.",
+        hint_en="Add at least one unit to the hydro_units table.",
+    ),
+    "geometry.unit_positions": Message(
+        it="Le posizioni delle unità devono essere 1, 2, 3, … senza salti; trovate {positions}.",
+        en="Unit positions must be 1, 2, 3, … without gaps; found {positions}.",
+        hint_it="Correggi il campo position della tabella hydro_units.",
+        hint_en="Fix the position field of the hydro_units table.",
+    ),
+    "geometry.surfaces_mismatch": Message(
+        it="Per {n_units} unità servono le superfici da 0 a {n_units}; trovate {indices}.",
+        en="{n_units} units need surfaces 0 to {n_units}; found {indices}.",
+        hint_it="La superficie 0 è il tetto del modello, la superficie i la base dell'unità i.",
+        hint_en="Surface 0 is the model top, surface i the bottom of unit i.",
+    ),
+    "geometry.raster_missing": Message(
+        it="Il raster «{path}» non esiste.",
+        en="Raster '{path}' does not exist.",
+        hint_it="Il percorso è relativo alla cartella del progetto; di solito sta in rasters/.",
+        hint_en="The path is relative to the project folder; usually under rasters/.",
+    ),
+    "geometry.raster_unreadable": Message(
+        it="Il raster «{path}» non si può leggere.",
+        en="Raster '{path}' cannot be read.",
+        hint_it="Controlla che sia un formato raster leggibile da GDAL, per esempio GeoTIFF.",
+        hint_en="Check that it is a raster format readable by GDAL, for example GeoTIFF.",
+    ),
+    "geometry.raster_crs": Message(
+        it="Il raster «{path}» è nel sistema {raster_crs}, diverso da quello del progetto "
+        "(EPSG:{epsg}).",
+        en="Raster '{path}' is in {raster_crs}, different from the project CRS (EPSG:{epsg}).",
+        hint_it="Riproietta il raster in QGIS nel sistema del progetto.",
+        hint_en="Reproject the raster in QGIS to the project CRS.",
+    ),
+    "geometry.raster_no_crs": Message(
+        it="Il raster «{path}» non dichiara un sistema di riferimento; si assume quello del "
+        "progetto (EPSG:{epsg}).",
+        en="Raster '{path}' declares no coordinate system; the project one (EPSG:{epsg}) is "
+        "assumed.",
+        hint_it="Assegna il sistema corretto al raster in QGIS per togliere l'ambiguità.",
+        hint_en="Assign the correct CRS to the raster in QGIS to remove the ambiguity.",
+    ),
+    "geometry.raster_coverage": Message(
+        it="Il raster «{path}» non copre {n_cells} celle attive, per esempio riga {row}, "
+        "colonna {col}.",
+        en="Raster '{path}' does not cover {n_cells} active cells, for example row {row}, "
+        "column {col}.",
+        hint_it="Estendi il raster a tutto il dominio, senza valori nodata al suo interno.",
+        hint_en="Extend the raster over the whole domain, without nodata values inside it.",
+    ),
+    "geometry.surfaces_crossing": Message(
+        it="La superficie {lower} sta sopra la superficie {upper} in {n_cells} celle, fino a "
+        "{max_m} m, per esempio riga {row}, colonna {col}.",
+        en="Surface {lower} lies above surface {upper} in {n_cells} cells, by up to {max_m} m, "
+        "for example row {row}, column {col}.",
+        hint_it="Correggi i raster; dove un'unità si chiude le due superfici devono coincidere.",
+        hint_en="Fix the rasters; where a unit pinches out the two surfaces must coincide.",
+    ),
+    "geometry.thin_unit": Message(
+        it="L'unità {unit} ha spessore inferiore al minimo di {min_m} m in {n_cells} celle, "
+        "che diventano a passaggio verticale.",
+        en="Unit {unit} is thinner than the minimum of {min_m} m in {n_cells} cells, which "
+        "become vertical pass-through cells.",
+        hint_it="Se è voluto non serve fare nulla; altrimenti controlla le superfici o "
+        "grid.min_thickness_m.",
+        hint_en="If intended nothing is needed; otherwise check the surfaces or "
+        "grid.min_thickness_m.",
+    ),
+    "geometry.empty_columns": Message(
+        it="In {n_cells} colonne del dominio tutte le unità sono sotto lo spessore minimo; "
+        "quelle colonne sono disattivate.",
+        en="In {n_cells} domain columns every unit is below the minimum thickness; those "
+        "columns are deactivated.",
+        hint_it="Controlla le superfici di contatto in quella zona.",
+        hint_en="Check the contact surfaces in that area.",
+    ),
+    "geometry.top_above_dem": Message(
+        it="Il tetto del modello supera il DEM di più di {tolerance_m} m in {n_cells} celle, "
+        "fino a {max_m} m.",
+        en="The model top exceeds the DEM by more than {tolerance_m} m in {n_cells} cells, "
+        "by up to {max_m} m.",
+        hint_it="Controlla il raster della superficie 0 e il riferimento verticale del DEM.",
+        hint_en="Check the raster of surface 0 and the vertical datum of the DEM.",
+    ),
     "internal.unexpected": Message(
         it="Errore interno imprevisto.",
         en="Unexpected internal error.",
@@ -298,6 +423,18 @@ class TimeError(PhrearError):
     """Time discretisation that cannot be built from the settings."""
 
     prefix = "time."
+
+
+class GeometryError(PhrearError):
+    """Domain, units, surfaces or rasters missing or inconsistent."""
+
+    prefix = "geometry."
+
+
+class GridError(PhrearError):
+    """Grid that cannot be built from the settings."""
+
+    prefix = "grid."
 
 
 class InternalError(PhrearError):

@@ -147,12 +147,31 @@ InitialHeads = Annotated[
 
 
 class Grid(_Section):
+    """Model grid (docs/SPEC.md, sections 10.3 and 14).
+
+    ``origin_x``/``origin_y`` are the lower-left corner of the grid and
+    ``rotation_deg`` the counter-clockwise rotation about it, as in MF6 DIS
+    (XORIGIN, YORIGIN, ANGROT). Without an origin the grid covers the domain.
+    """
+
     type: Literal["dis", "disv"] = "dis"
     cell_size_m: float | None = Field(default=None, gt=0)
-    rotation_deg: float = 0.0
+    rotation_deg: float = Field(default=0.0, ge=-180.0, le=180.0)
     origin_x: float | None = None
     origin_y: float | None = None
     min_thickness_m: float = Field(default=0.5, gt=0)
+    activation: Literal["centroid", "area"] = "centroid"
+    """A cell is active if its centroid is in the domain, or its area fraction is."""
+    min_area_fraction: float = Field(default=0.5, gt=0, le=1)
+    dem_tolerance_m: float = Field(default=1.0, ge=0)
+    """Maximum height of the model top above the DEM before a warning."""
+    max_cells_warning: int = Field(default=1_000_000, gt=0)
+
+    @model_validator(mode="after")
+    def _origin_pair(self) -> Grid:
+        if (self.origin_x is None) != (self.origin_y is None):
+            raise ValueError("origin_x and origin_y must be given together")
+        return self
 
 
 class Solver(_Section):

@@ -265,7 +265,7 @@ nome_progetto/
 - `time`: passi temporali automatici (`dt_initial_d`, `tsmult`, `dt_max_d`) e durata minima dei periodi (`min_period_d`), sezione 13.
 - `dem`: raster del DEM e riferimento verticale.
 - `initial_heads`: modalità (costante, raster, interpolazione delle misure alla `start_date`, risultato di un run precedente) con il relativo valore, raster o `run_id`.
-- `grid`: tipo, dimensione base, rotazione, origine, spessore minimo (`min_thickness_m`, default 0,5 m); regole di raffinamento da M4.
+- `grid`: tipo, dimensione base, rotazione e origine (convenzioni MF6: angolo in basso a sinistra, rotazione antioraria), spessore minimo (`min_thickness_m`, default 0,5 m), regola di attivazione delle celle (`activation`, `min_area_fraction`), tolleranza sul DEM (`dem_tolerance_m`), soglia di avviso sul numero di celle; regole di raffinamento da M4.
 - `solver`: preset standard, robusto oppure esperto con le opzioni IMS. Con Newton o XT3D il preset usa BICGSTAB.
 - `options.newton`: formulazione di Newton; default attivo per falde freatiche [DA CONFERMARE].
 - `options.xt3d`: automatico per le griglie quadtree (sezione 14).
@@ -342,9 +342,9 @@ Regole:
 ### 10.2 Controlli sulle superfici
 
 - **Ordine.** Ogni superficie deve stare sotto quella precedente, o coincidere con essa dove l'unità si chiude. Dove non è così l'errore è bloccante, con mappa delle celle interessate.
-- **DEM.** Il top del modello deve essere coerente con il DEM, entro una tolleranza configurabile.
-- **Copertura.** I raster devono coprire tutto il dominio, senza valori nodata al suo interno.
-- **Risoluzione.** Raster con risoluzioni diverse vengono ricampionati sulla griglia del modello con un metodo dichiarato. Per le quote il default è la media aritmetica pesata sull'area per celle più grandi del pixel, bilineare per celle più piccole. Per i parametri valgono le regole della sezione 11.
+- **DEM.** Il top del modello non deve superare il DEM di oltre una tolleranza configurabile (avviso). Un top sotto il DEM è ammesso, per esempio quando i terreni di copertura non sono modellati.
+- **Copertura.** I raster devono coprire tutto il dominio, senza valori nodata al suo interno; una cella attiva senza valore è un errore bloccante. I raster devono essere nel sistema di riferimento del progetto.
+- **Risoluzione.** Raster con risoluzioni diverse vengono ricampionati sulla griglia del modello con un metodo dichiarato. Per le quote il valore di una cella è la media sull'area della cella dell'interpolazione bilineare del raster, che per celle più piccole del pixel coincide con la bilineare al centro; il metodo non dipende dalla rotazione della griglia (ADR 0010). Per i parametri valgono le regole della sezione 11.
 - **Spessori.** Gli spessori sotto il minimo configurato vengono segnalati.
 
 ### 10.3 Dalle unità ai layer del modello
@@ -824,7 +824,7 @@ Regole:
 
 **Accettazione:** superfici interpolate con incertezza su un caso reale, confrontate con i raster esistenti.
 
-**Stato attuale:** M1a in corso. Completati gli incrementi 1 (scheletro del repository, ambiente, CI), 2 (unità, errori, eventi JSON), 3 (formato del progetto, comandi `new`, `info`, `schema`, `migrate`) e 4 (serie temporali, stress period, passi temporali, comando `calendar`).
+**Stato attuale:** M1a in corso. Completati gli incrementi 1 (scheletro del repository, ambiente, CI), 2 (unità, errori, eventi JSON), 3 (formato del progetto, comandi `new`, `info`, `schema`, `migrate`) e 4 (serie temporali, stress period, passi temporali, comando `calendar`) e 5 (griglia DIS, superfici, layer, controlli geometrici, comando `grid`).
 
 ---
 
@@ -910,3 +910,4 @@ Regole:
 | 33 | 2026-11-03 | project.toml letto con tomllib, validato con pydantic, scritto con tomlkit (ADR 0007) | Errori con il percorso della voce; commenti dell'utente conservati | tomli-w; scrittura manuale |
 | 34 | 2026-11-03 | Schema GeoPackage v1: un layer per tipo di geometria, nomi senza parole riservate, default nello schema, timestamp da trigger, hash di contenuto canonici, migrazioni con backup (ADR 0008) | Compatibilità con la digitalizzazione di QGIS; tracciabilità senza falsi positivi | Layer `Geometry` misti; hash del file; tutte le tabelle subito |
 | 35 | 2026-11-03 | Serie indefinite prima della prima data (attivazione), periodo stazionario di 1 d, accorpamento dei periodi brevi, passi con moltiplicatore massimo compatibile con primo e ultimo passo (ADR 0009) | Volumi conservati esattamente, verificati con MF6; nessuna estrapolazione silenziosa | Unione dei punti di cambio; valore a inizio passo; nstp e tsmult fissi |
+| 36 | 2026-11-03 | Griglia DIS con convenzioni MF6; superfici come media sulla cella della bilineare; copertura stretta; raster nel CRS del progetto; superfici incrociate come errore; DEM come avviso (ADR 0010) | Metodo esatto per superfici lineari a ogni rotazione; nessuna correzione silenziosa | Average di GDAL (impreciso su griglie ruotate); riproiezione automatica; troncamento degli spessori |
