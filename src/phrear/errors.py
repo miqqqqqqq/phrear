@@ -410,6 +410,223 @@ CATALOG: dict[str, Message] = {
         hint_it="Correggi il valore oppure min e max.",
         hint_en="Fix the value or min and max.",
     ),
+    "bc.geometry_missing": Message(
+        it="La feature {feature} del layer {layer} non ha geometria.",
+        en="Feature {feature} of layer {layer} has no geometry.",
+        hint_it="Disegna la geometria oppure disattiva la feature (active = 0).",
+        hint_en="Draw the geometry or deactivate the feature (active = 0).",
+    ),
+    "bc.outside_active": Message(
+        it="La feature {feature} del layer {layer} non interessa nessuna cella attiva.",
+        en="Feature {feature} of layer {layer} does not touch any active cell.",
+        hint_it="Controlla la posizione rispetto al dominio e le unità interessate; una linea "
+        "sul bordo del dominio va spostata verso l'interno di mezza cella.",
+        hint_en="Check its position against the domain and the units affected; a line on the "
+        "domain boundary should be moved inwards by half a cell.",
+    ),
+    "bc.maw_not_available": Message(
+        it="Il pozzo {feature} va rappresentato con MAW, disponibile da M3.",
+        en="Well {feature} is to be represented with MAW, available from M3.",
+        hint_it="Per ora usa model_as = auto oppure wel.",
+        hint_en="For now use model_as = auto or wel.",
+    ),
+    "bc.z_ref_missing": Message(
+        it="Il pozzo {feature} ha i filtri in profondità ma non la quota di riferimento z_ref.",
+        en="Well {feature} has its screen as depths but no reference elevation z_ref.",
+        hint_it="Compila z_ref in m s.l.m. oppure indica il filtro in quota con "
+        "depth_mode = elevation.",
+        hint_en="Fill z_ref in m a.s.l. or give the screen as elevations with "
+        "depth_mode = elevation.",
+    ),
+    "bc.screen_order": Message(
+        it="Il filtro del pozzo {feature} va da {top} a {bottom} m s.l.m.; l'inizio deve "
+        "stare sopra la fine.",
+        en="The screen of well {feature} goes from {top} to {bottom} m a.s.l.; its top must be "
+        "above its bottom.",
+        hint_it="Controlla screen_top, screen_bottom e depth_mode.",
+        hint_en="Check screen_top, screen_bottom and depth_mode.",
+    ),
+    "bc.screen_outside": Message(
+        it="Il filtro del pozzo {feature} ({top}–{bottom} m s.l.m.) non attraversa nessuna "
+        "cella attiva della colonna riga {row}, colonna {col}.",
+        en="The screen of well {feature} ({top}–{bottom} m a.s.l.) crosses no active cell of "
+        "the column at row {row}, column {col}.",
+        hint_it="Confronta le quote del filtro con quelle delle superfici del modello.",
+        hint_en="Compare the screen elevations with those of the model surfaces.",
+    ),
+    "bc.value_missing": Message(
+        it="La feature {feature} del layer {layer} non ha né un valore costante né una serie.",
+        en="Feature {feature} of layer {layer} has neither a constant value nor a series.",
+        hint_it="Compila {field} oppure series_id.",
+        hint_en="Fill {field} or series_id.",
+    ),
+    "bc.unit_missing": Message(
+        it="La feature {feature} del layer {layer} non ha l'unità di misura di {field}.",
+        en="Feature {feature} of layer {layer} has no unit of measure for {field}.",
+        hint_it="Compila {unit_field}, per esempio l/s per una portata o mm/anno per la ricarica.",
+        hint_en="Fill {unit_field}, for example l/s for a rate or mm/year for recharge.",
+    ),
+    "bc.negative_rate": Message(
+        it="Il pozzo {feature} ha una portata negativa ({value}).",
+        en="Well {feature} has a negative rate ({value}).",
+        hint_it="La portata va in valore assoluto; il segno dipende da role "
+        "(extraction o injection).",
+        hint_en="The rate is an absolute value; its sign follows role (extraction or injection).",
+    ),
+    "bc.negative_series": Message(
+        it="La serie {series_id}, usata come portata dal pozzo {feature}, ha valori negativi.",
+        en="Series {series_id}, used as rate by well {feature}, has negative values.",
+        hint_it="Le portate vanno in valore assoluto; il segno dipende da role "
+        "(extraction o injection).",
+        hint_en="Rates are absolute values; their sign follows role (extraction or injection).",
+    ),
+    "bc.series_quantity": Message(
+        it="La feature {feature} del layer {layer} usa la serie {series_id}, che è una serie "
+        "di {actual}; qui serve una serie di {expected}.",
+        en="Feature {feature} of layer {layer} uses series {series_id}, which is a series of "
+        "{actual}; a series of {expected} is needed here.",
+        hint_it="Scegli un'altra serie oppure correggi quantity in timeseries_meta.",
+        hint_en="Choose another series or fix quantity in timeseries_meta.",
+    ),
+    "bc.unit_range": Message(
+        it="La feature {feature} del layer {layer} indica le unità da {top_unit} a "
+        "{bottom_unit}, ma il modello ha le unità da 1 a {n_units}.",
+        en="Feature {feature} of layer {layer} gives the units from {top_unit} to "
+        "{bottom_unit}, but the model has units 1 to {n_units}.",
+        hint_it="Correggi top_unit e bottom_unit, oppure lasciali vuoti per tutte le unità.",
+        hint_en="Fix top_unit and bottom_unit, or leave them empty for all units.",
+    ),
+    "bc.station_unknown_feature": Message(
+        it="La stazione {station} si riferisce alla feature con fid {feature_id} del layer "
+        "{feature_layer}, che non esiste.",
+        en="Station {station} refers to the feature with fid {feature_id} of layer "
+        "{feature_layer}, which does not exist.",
+        hint_it="Correggi feature_layer o feature_id, oppure elimina la stazione.",
+        hint_en="Fix feature_layer or feature_id, or delete the station.",
+    ),
+    "bc.no_stations": Message(
+        it="La feature {feature} del layer {layer} non ha stazioni con il carico.",
+        en="Feature {feature} of layer {layer} has no stations with the head.",
+        hint_it="Aggiungi una stazione in line_stations con feature_layer = {layer_code} e "
+        "feature_id = {fid}.",
+        hint_en="Add a station in line_stations with feature_layer = {layer_code} and "
+        "feature_id = {fid}.",
+    ),
+    "bc.area_stations": Message(
+        it="L'area {feature} ha {n} stazioni, ma su un'area il carico è uniforme e la "
+        "stazione è una sola.",
+        en="Area {feature} has {n} stations, but the head over an area is uniform and needs "
+        "a single station.",
+        hint_it="Tieni una sola stazione.",
+        hint_en="Keep a single station.",
+    ),
+    "bc.station_no_value": Message(
+        it="La stazione {station} non ha né un carico costante né una serie.",
+        en="Station {station} has neither a constant head nor a series.",
+        hint_it="Compila value oppure series_id.",
+        hint_en="Fill value or series_id.",
+    ),
+    "bc.multipart_line": Message(
+        it="La linea {feature} è formata da {n} parti separate.",
+        en="Line {feature} is made of {n} separate parts.",
+        hint_it="Dividila in feature distinte, ciascuna con le sue stazioni.",
+        hint_en="Split it into separate features, each with its own stations.",
+    ),
+    "bc.chainage_beyond": Message(
+        it="La stazione {station} ha progressiva {chainage} m, oltre la lunghezza della linea "
+        "{feature} ({length} m).",
+        en="Station {station} has chainage {chainage} m, beyond the length of line {feature} "
+        "({length} m).",
+        hint_it="Correggi chainage oppure lascialo vuoto per calcolarlo dalla posizione.",
+        hint_en="Fix chainage or leave it empty to compute it from the position.",
+    ),
+    "bc.duplicate_chainage": Message(
+        it="Le stazioni {first} e {second} della linea {feature} hanno la stessa progressiva "
+        "({chainage} m).",
+        en="Stations {first} and {second} of line {feature} have the same chainage ({chainage} m).",
+        hint_it="Elimina una delle due oppure correggi la progressiva.",
+        hint_en="Delete one of them or fix the chainage.",
+    ),
+    "bc.mixed_interpolation": Message(
+        it="Le stazioni della linea {feature} usano serie a gradino e serie lineari.",
+        en="The stations of line {feature} use both stepwise and linear series.",
+        hint_it="Usa lo stesso tipo di interpolazione per tutte le serie della linea; così "
+        "il carico tra due stazioni resta esatto in ogni istante.",
+        hint_en="Use the same interpolation for all series of the line, so that the head "
+        "between two stations stays exact at every instant.",
+    ),
+    "bc.head_below_bottom": Message(
+        it="Il carico imposto dalla feature {feature} scende a {head} m s.l.m. nella colonna "
+        "riga {row}, colonna {col}, sotto la base dell'ultimo layer interessato "
+        "({bottom} m s.l.m.).",
+        en="The head fixed by feature {feature} drops to {head} m a.s.l. in the column at "
+        "row {row}, column {col}, below the bottom of the lowest layer affected "
+        "({bottom} m a.s.l.).",
+        hint_it="MODFLOW 6 non accetta carichi imposti sotto la base della cella; controlla "
+        "carichi, unità interessate e superfici.",
+        hint_en="MODFLOW 6 does not accept fixed heads below the cell bottom; check heads, "
+        "units affected and surfaces.",
+    ),
+    "bc.screen_clipped": Message(
+        it="Il filtro del pozzo {feature} è lungo {length} m e {inside} m cadono in celle "
+        "attive; la portata si ripartisce solo su quei tratti.",
+        en="The screen of well {feature} is {length} m long and {inside} m lie in active "
+        "cells; the rate is shared among those parts only.",
+        hint_it="Confronta le quote del filtro con quelle delle superfici del modello.",
+        hint_en="Compare the screen elevations with those of the model surfaces.",
+    ),
+    "bc.line_outside": Message(
+        it="Della linea {feature}, lunga {length} m, {outside} m attraversano celle non attive "
+        "o fuori dalle unità interessate e lì non impongono il carico.",
+        en="Of line {feature}, {length} m long, {outside} m cross cells that are inactive or "
+        "outside the units affected, where no head is fixed.",
+        hint_it="Se la linea segue il bordo del dominio, spostala verso l'interno di mezza "
+        'cella oppure usa grid.activation = "area".',
+        hint_en="If the line follows the domain boundary, move it inwards by half a cell or "
+        'use grid.activation = "area".',
+    ),
+    "bc.station_far": Message(
+        it="La stazione {station} dista {distance} m dalla linea {feature}, più del lato di "
+        "una cella ({cell} m).",
+        en="Station {station} is {distance} m away from line {feature}, more than one cell "
+        "side ({cell} m).",
+        hint_it="Controlla che la stazione appartenga alla linea giusta.",
+        hint_en="Check that the station belongs to the right line.",
+    ),
+    "bc.chd_overlap": Message(
+        it="{n_cells} celle ricevono il carico imposto da più feature, per esempio layer "
+        "{layer}, riga {row}, colonna {col} ({first} e {second}); vale la prima.",
+        en="{n_cells} cells receive a fixed head from several features, for example layer "
+        "{layer}, row {row}, column {col} ({first} and {second}); the first one applies.",
+        hint_it="Accorcia o separa le feature che si sovrappongono.",
+        hint_en="Shorten or separate the overlapping features.",
+    ),
+    "bc.chd_layers_excluded": Message(
+        it="In {n_cells} celle della feature {feature} il carico imposto scende sotto la base "
+        "della cella in parte della simulazione; restano senza carico imposto, per esempio "
+        "layer {layer}, riga {row}, colonna {col}.",
+        en="In {n_cells} cells of feature {feature} the fixed head drops below the cell "
+        "bottom during part of the simulation; they get no fixed head, for example layer "
+        "{layer}, row {row}, column {col}.",
+        hint_it="MODFLOW 6 non accetta carichi imposti sotto la base della cella; quando il "
+        "carico vi risale, quelle celle sono alimentate dai layer sottostanti.",
+        hint_en="MODFLOW 6 does not accept fixed heads below the cell bottom; when the head "
+        "rises again, those cells are fed by the layers below.",
+    ),
+    "bc.zone_outside": Message(
+        it="La zona di ricarica {feature} non copre nessuna cella attiva.",
+        en="Recharge zone {feature} covers no active cell.",
+        hint_it="Controlla la posizione della zona rispetto al dominio.",
+        hint_en="Check the position of the zone against the domain.",
+    ),
+    "bc.zone_overlap": Message(
+        it="Le zone di ricarica {first} e {second} si sovrappongono per {area} m²; lì le "
+        "ricariche si sommano.",
+        en="Recharge zones {first} and {second} overlap over {area} m²; there the recharge "
+        "rates add up.",
+        hint_it="Correggi i contorni se la sovrapposizione non è voluta.",
+        hint_en="Fix the outlines if the overlap is not intended.",
+    ),
     "init.missing": Message(
         it="Mancano i carichi iniziali.",
         en="The initial heads are missing.",
@@ -555,6 +772,12 @@ class InitialHeadsError(PhrearError):
     """Initial heads missing or of an unsupported kind."""
 
     prefix = "init."
+
+
+class BoundaryError(PhrearError):
+    """Boundary condition features that cannot be turned into model input."""
+
+    prefix = "bc."
 
 
 class InternalError(PhrearError):

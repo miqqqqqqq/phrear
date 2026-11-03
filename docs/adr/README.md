@@ -15,6 +15,7 @@ Ogni decisione presa durante lo sviluppo ha un file numerato in questa cartella 
 | [0009](0009-discretizzazione-temporale.md) | Discretizzazione temporale | accettata | 35 |
 | [0010](0010-geometria-e-griglia.md) | Geometria e griglia DIS | accettata | 36 |
 | [0011](0011-parametri-e-carichi-iniziali.md) | Parametri uniformi per unità e carichi iniziali | accettata | 37 |
+| [0012](0012-condizioni-al-contorno-m1a.md) | Condizioni al contorno di M1a: pozzi, carichi imposti, ricarica | accettata | 38 |
 
 ## Modello
 

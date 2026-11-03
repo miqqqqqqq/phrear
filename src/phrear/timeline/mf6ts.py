@@ -42,8 +42,16 @@ def mf6_names(series_ids: list[str]) -> dict[str, str]:
     return names
 
 
-def ts_records(series: TimeSeries, calendar: Calendar, name: str) -> TsRecords:
-    activation = calendar.activations[series.series_id]
+def ts_records(
+    series: TimeSeries, calendar: Calendar, name: str, activation: datetime | None = None
+) -> TsRecords:
+    """Records from the activation date to the model end.
+
+    ``activation`` defaults to the calendar activation of the series; series derived
+    from others (for example the head of a cell between two stations) pass their own.
+    """
+    if activation is None:
+        activation = calendar.activations[series.series_id]
     end = calendar.end
 
     def value(moment: datetime) -> float:

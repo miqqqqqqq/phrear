@@ -167,7 +167,7 @@ QGIS 4 + plugin ──(CLI + eventi JSON)──> core phrear ──> MODFLOW 6 (
                                viewer 3D ────┘ (legge i risultati)
 ```
 
-Comandi CLI minimi: `new`, `check`, `grid`, `params`, `build`, `run`, `results`, `export`, `migrate`, `info`, `schema`, `calendar`, `import`, `scenario`, `verify`. Ogni comando accetta l'opzione `--json` per produrre l'output come eventi. Il comando `verify` esegue i test di verifica sull'installazione dell'utente e produce il report di affidabilità (sezione 20). Codici di uscita: 0 successo, 1 errore nell'input o nel progetto, 2 riga di comando non valida, 3 errore interno (ADR 0006).
+Comandi CLI minimi: `new`, `check`, `grid`, `params`, `bc`, `build`, `run`, `results`, `export`, `migrate`, `info`, `schema`, `calendar`, `import`, `scenario`, `verify`. Ogni comando accetta l'opzione `--json` per produrre l'output come eventi. Il comando `verify` esegue i test di verifica sull'installazione dell'utente e produce il report di affidabilità (sezione 20). Codici di uscita: 0 successo, 1 errore nell'input o nel progetto, 2 riga di comando non valida, 3 errore interno (ADR 0006).
 
 ---
 
@@ -419,10 +419,10 @@ Il comando `params` mostra per ogni unità valore originale, valore nelle unità
 | Concetto utente | Pacchetto MF6 | Input fisici | Calcolo |
 |---|---|---|---|
 | Pozzo con filtro in una sola unità | WEL | portata (l/s, m³/d, m³/anno), filtro | portata assegnata alla cella che contiene il filtro |
-| Pozzo con filtro su più layer | WEL distribuito o MAW | portata, filtro, raggio | WEL: ripartizione proporzionale alla trasmissività dei tratti filtrati. MAW: scelta automatica se `model_as = auto` [DA CONFERMARE] |
+| Pozzo con filtro su più layer | WEL distribuito o MAW | portata, filtro, raggio | WEL: ripartizione proporzionale alla trasmissività dei tratti filtrati, T_k = K_k · l_k (da M1a). MAW: scelta automatica se `model_as = auto` [DA CONFERMARE] |
 | Fiume, canale | RIV | livello (serie) e quota del fondo per stazioni lungo il tracciato, larghezza, spessore e K dell'alveo | C = K_alveo · L · W / M, con L lunghezza del tratto nella cella; layer scelto in base alla quota del fondo (rbot), che non può stare sotto il bottom della cella |
 | Trincea drenante, drenaggio | DRN | quota per stazioni; parametri fisici o conduttanza diretta | come RIV, oppure conduttanza inserita |
-| Carico imposto | CHD | carico (serie) per stazioni | – |
+| Carico imposto | CHD | carico (serie) per stazioni | solo layer con base sotto il carico minimo della simulazione (MF6 rifiuta carichi sotto la base) |
 | Carico generale (limite distante) | GHB | carico (serie) per stazioni; distanza e K, oppure conduttanza | C = K · A / d, con K della cella, A = lato della cella × spessore saturo, d distanza dal limite |
 | Diaframma, palancole | HFB | K, spessore, top, bottom | caratteristica idraulica = K / spessore, applicata ai soli layer intersecati verticalmente, sulle facce condivise tra celle adiacenti attraversate dalla linea; penetrazione parziale con hydchr equivalente (regole sotto) |
 | Ricarica | RCH | tasso (mm/anno, mm/d), per zone o da raster con moltiplicatore nel tempo | conversione in m/d; si applica alla cella attiva più alta |
@@ -430,11 +430,14 @@ Il comando `params` mostra per ogni unità valore originale, valore nelle unità
 
 Regole:
 
-- **Intersezione con la griglia.** Le feature lineari e poligonali si intersecano con la griglia (FloPy GridIntersect), calcolando lunghezze e aree effettive per cella. I pozzi si assegnano punto → cella. Le barriere si intersecano con le facce condivise tra celle adiacenti; su DIS una barriera obliqua diventa una sequenza di facce a gradini, e la lunghezza effettiva viene riportata nel log.
+- **Intersezione con la griglia.** Le feature lineari e poligonali si intersecano con la griglia con shapely, calcolando lunghezze e aree effettive per cella; le celle sono chiuse, quindi una linea lungo un lato appartiene alle celle dei due lati (ADR 0012). I pozzi si assegnano punto → cella. Le barriere si intersecano con le facce condivise tra celle adiacenti; su DIS una barriera obliqua diventa una sequenza di facce a gradini, e la lunghezza effettiva viene riportata nel log.
 - **Barriere a penetrazione parziale.** Se il piede della barriera cade dentro un layer, un HFB su tutta la faccia chiuderebbe anche il passaggio sotto il piede. Si usa una hydchr equivalente. Con f frazione ostruita della faccia, C_c conduttanza cella–cella e C_s conduttanza della faccia intera con la barriera in serie, la conduttanza totale è C_tot = f · C_s + (1 − f) · C_c, cioè il parallelo tra parte ostruita e parte libera. Ne segue hydchr_eq = [L · b · (1/C_tot − 1/C_c)]⁻¹, con L lunghezza della faccia e b spessore saturo. L'approssimazione trascura la deviazione verticale del flusso attorno al piede; se il piede cade a metà di un'unità spessa, un avviso suggerisce di suddividere il layer alla quota del piede.
-- **Variazione lungo le linee.** I valori delle stazioni si interpolano linearmente per progressiva. Le serie di stazioni diverse si allineano sulle stesse date.
+- **Variazione lungo le linee.** I valori delle stazioni si interpolano linearmente per progressiva, con la progressiva del punto medio del tratto nella cella; oltre le stazioni di estremità vale il loro valore. Le serie di stazioni diverse si combinano sull'unione delle date, in modo esatto se sono tutte a gradino o tutte lineari; una linea non può mescolare i due tipi. Una linea si attiva quando tutte le sue stazioni sono definite. Un'area ha una sola stazione (ADR 0012).
+- **Carichi imposti e layer.** Un layer riceve il carico solo se la sua base sta sotto il carico minimo della simulazione; un layer attraversato dal carico durante il run resta libero, con un avviso. Una cella con più carichi imposti tiene il primo (linee prima delle aree, per fid), con un avviso.
+- **Ricarica.** Il tasso va alla cella attiva più alta, moltiplicato per la frazione della cella coperta dalla zona; zone sovrapposte si sommano, con un avviso.
+- **Moltiplicatori.** Quote di portata per layer, segno dell'estrazione e frazioni d'area vanno nella variabile ausiliaria AUXMULTNAME di MF6, così valori e serie restano quelli inseriti.
 - **Pozzi in celle convertibili con Newton.** Si attiva AUTO_FLOW_REDUCE e si esportano le portate effettive (AUTO_FLOW_REDUCE_CSV). Se la portata effettiva scende sotto quella di progetto, il run emette un avviso e i risultati riportano entrambe; in quel caso la portata di progetto non è sostenibile nella cella.
-- **Tipi registrati.** Ogni tipo di condizione è registrato secondo la sezione 21: schema dei campi, validazione, generazione dell'input MF6, etichette IT/EN.
+- **Tipi registrati.** Ogni tipo di condizione è registrato secondo la sezione 21: schema dei campi, validazione, generazione dell'input MF6, etichette IT/EN. Il comando `bc` mostra per pacchetto feature, celle e righe per periodo e con `--export` scrive le celle assegnate in `exports/bc.gpkg`.
 - **Osservazioni.** Le osservazioni di carico generano il pacchetto OBS di MF6. Il confronto con le misure interpola i valori simulati alle date di misura. Un'opzione permette di far terminare un timestep in corrispondenza di ciascuna data di misura. Per i piezometri con filtro su più layer il carico simulato è la media dei carichi dei layer filtrati, pesata sulla trasmissività dei tratti filtrati.
 
 ---
@@ -488,14 +491,16 @@ Elenco iniziale:
   - Valori mancanti o fuori intervallo, inclusa la porosità efficace.
   - Kv maggiore di Kh.
 - **Condizioni al contorno.**
-  - Feature fuori dal dominio.
-  - Filtri dei pozzi fuori dalle unità.
+  - Feature fuori dal dominio: errore per pozzi e carichi imposti, avviso per le zone di ricarica; avviso per le linee in parte fuori dalle celle attive.
+  - Filtri dei pozzi fuori dalle celle attive: errore se del tutto fuori, avviso se in parte.
   - Livello del fiume sotto il fondo dell'alveo.
   - Fondo dell'alveo sotto il bottom della cella assegnata (MF6 lo rifiuta).
   - Quota di drenaggio sopra il top della cella.
   - Piede di una barriera a metà di un'unità spessa (avviso, suggerisce la suddivisione del layer).
-  - Stazioni mancanti o lontane dalla linea a cui appartengono.
-  - CHD nella stessa cella di altre condizioni.
+  - Stazioni mancanti (errore) o lontane dalla linea a cui appartengono (avviso, oltre una cella).
+  - Carico imposto sotto la base della cella (layer lasciato libero, errore se lo sono tutti).
+  - Più carichi imposti nella stessa cella (avviso, vale il primo); CHD nella stessa cella di altre condizioni.
+  - Zone di ricarica sovrapposte (avviso).
   - Serie temporali che non coprono il periodo simulato.
 - **Condizioni iniziali.**
   - Carichi iniziali sotto la base dell'ultima cella attiva della colonna (avviso). Sotto la base di una cella convertibile superiore il carico è normale (ADR 0011).
@@ -724,6 +729,7 @@ Regole:
 - schema di progetto v1 con `domain`, `hydro_units`, `surfaces`, `param_values`, `wells`, `fixed_heads` (solo CHD), `line_stations`, `recharge_zones`, `timeseries_meta`, `timeseries_values`, `scenarios` e `scenario_changes` (solo struttura);
 - geometria da raster con superfici di contatto e DEM;
 - parametri uniformi per unità;
+- pozzi (WEL, anche con filtro su più layer), carichi imposti (CHD) da stazioni lungo linee e su aree, ricarica (RCH) per zone;
 - carichi iniziali costanti o da raster;
 - griglia DIS;
 - stress period ai cambi di regime e file TS;
@@ -766,7 +772,6 @@ Regole:
 - HFB sulle facce, con penetrazione parziale;
 - ricarica ed ET da raster;
 - AUTO_FLOW_REDUCE con export delle portate effettive;
-- WEL distribuito su più layer;
 - OBS, con piezometri su più layer;
 - serie temporali lineari e a gradino;
 - calendario degli stress period visibile.
@@ -840,7 +845,7 @@ Regole:
 
 **Accettazione:** superfici interpolate con incertezza su un caso reale, confrontate con i raster esistenti.
 
-**Stato attuale:** M1a in corso. Completati gli incrementi 1 (scheletro del repository, ambiente, CI), 2 (unità, errori, eventi JSON), 3 (formato del progetto, comandi `new`, `info`, `schema`, `migrate`) 4 (serie temporali, stress period, passi temporali, comando `calendar`), 5 (griglia DIS, superfici, layer, controlli geometrici, comando `grid`) e 6 (parametri uniformi per unità, carichi iniziali costanti o da raster, comando `params`).
+**Stato attuale:** M1a in corso. Completati gli incrementi 1 (scheletro del repository, ambiente, CI), 2 (unità, errori, eventi JSON), 3 (formato del progetto, comandi `new`, `info`, `schema`, `migrate`) 4 (serie temporali, stress period, passi temporali, comando `calendar`), 5 (griglia DIS, superfici, layer, controlli geometrici, comando `grid`), 6 (parametri uniformi per unità, carichi iniziali costanti o da raster, comando `params`) e 7 (registro delle condizioni al contorno, WEL, CHD da stazioni, RCH, comando `bc`).
 
 ---
 
@@ -928,3 +933,4 @@ Regole:
 | 35 | 2026-11-03 | Serie indefinite prima della prima data (attivazione), periodo stazionario di 1 d, accorpamento dei periodi brevi, passi con moltiplicatore massimo compatibile con primo e ultimo passo (ADR 0009) | Volumi conservati esattamente, verificati con MF6; nessuna estrapolazione silenziosa | Unione dei punti di cambio; valore a inizio passo; nstp e tsmult fissi |
 | 36 | 2026-11-03 | Griglia DIS con convenzioni MF6; superfici come media sulla cella della bilineare; copertura stretta; raster nel CRS del progetto; superfici incrociate come errore; DEM come avviso (ADR 0010) | Metodo esatto per superfici lineari a ogni rotazione; nessuna correzione silenziosa | Average di GDAL (impreciso su griglie ruotate); riproiezione automatica; troncamento degli spessori |
 | 37 | 2026-11-03 | Parametri uniformi per unità con unità di misura obbligatoria per K e Ss; Kh, Ss, Kv o Kv/Kh obbligatori, Sy solo per le unità convertibili; intervalli plausibili generali come avviso; carichi iniziali costanti o da raster, avviso solo sotto l'ultima cella attiva (ADR 0011) | Nessun default silenzioso su grandezze dimensionali; avvisi solo su condizioni anomale | Unità vuota come unità interna; Kv = Kh di default; intervalli per litologia prima di M8; avviso su ogni cella sotto la base |
+| 38 | 2026-11-03 | Registro `BoundaryConditionType`; intersezioni con shapely su celle chiuse; WEL ripartito per trasmissività dei tratti filtrati (anticipato da M3); CHD interpolato per progressiva con serie combinate sull'unione delle date, attivazione dell'intera linea, solo layer con base sotto il carico minimo, prima feature nelle sovrapposizioni; RCH alla cella attiva più alta con frazione d'area; moltiplicatori in AUXMULTNAME (ADR 0012) | Vincoli di MF6 verificati (CHD sotto la base e CHD doppi rifiutati, righe WEL/RCH multiple accettate); volumi e carichi esatti nel tempo | FloPy GridIntersect; carico costante nel periodo; stazione più vicina; CHD su tutti i layer; errore sulle sovrapposizioni CHD |

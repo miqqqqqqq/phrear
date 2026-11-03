@@ -7,8 +7,11 @@ Domain 2000 m × 1500 m, cells of 100 m (15 rows × 20 columns), two units:
 
 from __future__ import annotations
 
+import struct
+from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import geopandas as gpd
 import numpy as np
@@ -54,4 +57,58 @@ def build_site(root: Path) -> Project:
     return project
 
 
-__all__ = ["BOTTOM_1", "BOTTOM_2", "CELL", "DOMAIN", "TOP", "X0", "Y0", "build_site"]
+#: Valid parameters of the site: unit 1 convertible, unit 2 confined.
+VALID: dict[int, list[tuple[str, float, str]]] = {
+    1: [("kh", 1e-4, "m/s"), ("anisotropy", 0.1, ""), ("ss", 1e-4, "1/m"), ("sy", 15.0, "%")],
+    2: [("kh", 50.0, "m/d"), ("kv", 5.0, "m/d"), ("ss", 1e-5, "1/m"), ("ne", 0.2, "")],
+}
+
+AddParam = Callable[..., int]
+
+
+def unit_fid(project: Project, position: int) -> int:
+    with gpkg.connect(project.gpkg_path) as conn:
+        row = conn.execute(
+            'SELECT fid FROM "hydro_units" WHERE position = ?', (position,)
+        ).fetchone()
+    return int(row[0])
+
+
+def gpkg_blob(geometry: shapely.Geometry, srs_id: int = 7791) -> bytes:
+    """GeoPackage geometry blob without envelope, little endian."""
+    header = b"GP" + bytes([0, 0x01]) + struct.pack("<i", srs_id)
+    wkb: bytes = shapely.to_wkb(geometry, byte_order=1)
+    return header + wkb
+
+
+def insert(
+    project: Project, layer: str, geometry: shapely.Geometry | None = None, **fields: Any
+) -> int:
+    """Insert a row (a feature if ``geometry`` is given); returns its fid."""
+    values = dict(fields)
+    if geometry is not None:
+        values[gpkg.GEOMETRY_COLUMN] = gpkg_blob(geometry)
+    names = ", ".join(f'"{k}"' for k in values)
+    marks = ", ".join("?" for _ in values)
+    with gpkg.connect(project.gpkg_path) as conn:
+        cursor = conn.execute(
+            f'INSERT INTO "{layer}" ({names}) VALUES ({marks})', tuple(values.values())
+        )
+        return int(cursor.lastrowid or 0)
+
+
+__all__ = [
+    "BOTTOM_1",
+    "BOTTOM_2",
+    "CELL",
+    "DOMAIN",
+    "TOP",
+    "VALID",
+    "X0",
+    "Y0",
+    "AddParam",
+    "build_site",
+    "gpkg_blob",
+    "insert",
+    "unit_fid",
+]
