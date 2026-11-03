@@ -117,14 +117,25 @@ def _configure_check(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("path", type=Path, nargs="?", default=Path(), help="project folder")
 
 
-def _check(args: argparse.Namespace, ctx: Context) -> int:
-    ins = inspect_project(Project.open(args.path))
+def emit_problems(ins: Inspection, ctx: Context) -> None:
+    """In JSON mode, one event per error and per warning."""
     if ctx.sink is not None:
         for p in ins.errors:
             ctx.sink.emit(ErrorEvent(problem=p))
         for p in ins.warnings:
             ctx.sink.emit(WarningEvent(problem=p))
-    ctx.result("check", _data(ins), _text(ins, ctx.lang))
+
+
+def print_problems(ins: Inspection, ctx: Context) -> None:
+    """In text mode, every error then every warning."""
+    if ctx.sink is None:
+        lines = [line for p in ins.errors for line in _finding(p, "Error", ctx.lang)]
+        lines += [line for p in ins.warnings for line in _finding(p, "Warning", ctx.lang)]
+        if lines:
+            ctx.out.write("\n".join(lines) + "\n")
+
+
+def raise_if_errors(ins: Inspection) -> None:
     if ins.errors:
         n = len(ins.errors)
         errors = Localized(
@@ -132,6 +143,13 @@ def _check(args: argparse.Namespace, ctx: Context) -> int:
             "1 blocking error" if n == 1 else f"{n} blocking errors",
         )
         raise CheckError("check.failed", errors=errors)
+
+
+def _check(args: argparse.Namespace, ctx: Context) -> int:
+    ins = inspect_project(Project.open(args.path))
+    emit_problems(ins, ctx)
+    ctx.result("check", _data(ins), _text(ins, ctx.lang))
+    raise_if_errors(ins)
     return 0
 
 

@@ -6,6 +6,7 @@ from phrear.commands import (
     grid_commands,
     params_commands,
     project_commands,
+    run_commands,
     time_commands,
 )
 from phrear.commands.base import CommandSpec, Configure, Context, Handler
@@ -18,6 +19,7 @@ COMMANDS: list[CommandSpec] = [
     *params_commands.COMMANDS,
     *bc_commands.COMMANDS,
     *check_commands.COMMANDS,
+    *run_commands.COMMANDS,
 ]
 
 __all__ = ["COMMANDS", "CommandSpec", "Configure", "Context", "Handler"]

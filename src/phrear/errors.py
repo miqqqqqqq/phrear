@@ -687,6 +687,56 @@ CATALOG: dict[str, Message] = {
         hint_it="Imposta options.newton = true, salvo motivi specifici.",
         hint_en="Set options.newton = true unless there are specific reasons.",
     ),
+    "run.engine_not_found": Message(
+        it="Non trovo l'eseguibile di MODFLOW 6 (mf6).",
+        en="The MODFLOW 6 executable (mf6) cannot be found.",
+        hint_it="Esegui phrear dall'ambiente del progetto, per esempio pixi run phrear run.",
+        hint_en="Run phrear from the project environment, for example pixi run phrear run.",
+    ),
+    "run.exists": Message(
+        it="Il run «{run_id}» esiste già in {path}.",
+        en="Run '{run_id}' already exists in {path}.",
+        hint_it="Scegli un altro --run-id oppure omettilo per crearne uno nuovo.",
+        hint_en="Choose another --run-id or omit it to create a new one.",
+    ),
+    "run.invalid_id": Message(
+        it="L'identificativo del run «{run_id}» non è valido.",
+        en="The run identifier '{run_id}' is not valid.",
+        hint_it="Usa lettere, cifre, trattini e trattini bassi, fino a 40 caratteri.",
+        hint_en="Use letters, digits, hyphens and underscores, up to 40 characters.",
+    ),
+    "run.engine_error": Message(
+        it="MODFLOW 6 ha rifiutato l'input del run {run_id} ({message}).",
+        en="MODFLOW 6 rejected the input of run {run_id} ({message}).",
+        hint_it="Il listing completo è in {listing}. I controlli di phrear dovrebbero "
+        "intercettare gli errori dei dati: se non l'hanno fatto, è un difetto da segnalare.",
+        hint_en="The full listing is in {listing}. The phrear checks should catch data "
+        "errors: if they did not, it is a defect to report.",
+    ),
+    "run.convergence": Message(
+        it="Nel run {run_id} la soluzione non converge nel periodo {period}, passo {step}.",
+        en="In run {run_id} the solution does not converge in period {period}, step {step}.",
+        hint_it='Prova solver.preset = "robust", passi iniziali più brevi (time.dt_initial_d) '
+        "e controlla le celle che si asciugano; i dettagli sono in {listing}.",
+        hint_en='Try solver.preset = "robust", shorter initial steps (time.dt_initial_d) and '
+        "check the cells that dry out; details are in {listing}.",
+    ),
+    "run.terminated": Message(
+        it="MODFLOW 6 si è fermato senza terminare normalmente il run {run_id} "
+        "(codice {returncode}).",
+        en="MODFLOW 6 stopped without completing run {run_id} normally (code {returncode}).",
+        hint_it="Controlla il listing in {listing} e l'output in {stdout}.",
+        hint_en="Check the listing in {listing} and the output in {stdout}.",
+    ),
+    "run.budget_discrepancy": Message(
+        it="Nel run {run_id} l'errore di bilancio arriva a {value} % nel periodo {period}, "
+        "passo {step}.",
+        en="In run {run_id} the budget error reaches {value} % in period {period}, step {step}.",
+        hint_it="Oltre l'1 % i risultati vanno usati con cautela; stringi le tolleranze del "
+        "solutore o riduci i passi.",
+        hint_en="Above 1 % the results should be used with care; tighten the solver "
+        "tolerances or shorten the steps.",
+    ),
     "init.missing": Message(
         it="Mancano i carichi iniziali.",
         en="The initial heads are missing.",
@@ -844,6 +894,12 @@ class CheckError(PhrearError):
     """Outcome of a check that found blocking errors."""
 
     prefix = "check."
+
+
+class RunError(PhrearError):
+    """Build or execution of a MODFLOW 6 run that cannot be completed."""
+
+    prefix = "run."
 
 
 class ErrorCollector:

@@ -266,7 +266,7 @@ nome_progetto/
 - `dem`: raster del DEM e riferimento verticale.
 - `initial_heads`: modalità (costante, raster, interpolazione delle misure alla `start_date`, risultato di un run precedente) con il relativo valore, raster o `run_id`.
 - `grid`: tipo, dimensione base, rotazione e origine (convenzioni MF6: angolo in basso a sinistra, rotazione antioraria), spessore minimo (`min_thickness_m`, default 0,5 m), regola di attivazione delle celle (`activation`, `min_area_fraction`), tolleranza sul DEM (`dem_tolerance_m`), soglia di avviso sul numero di celle; regole di raffinamento da M4.
-- `solver`: preset standard, robusto oppure esperto con le opzioni IMS. Con Newton o XT3D il preset usa BICGSTAB.
+- `solver`: preset standard, robusto oppure esperto con le opzioni IMS. Con Newton o XT3D il preset usa BICGSTAB. Tolleranze comuni: 10⁻⁴ m sulle iterazioni esterne, 10⁻⁵ m su quelle interne, residuo 10⁻³ m³/d (ADR 0014).
 - `options.newton`: formulazione di Newton; default attivo per falde freatiche [DA CONFERMARE].
 - `options.xt3d`: automatico per le griglie quadtree (sezione 14).
 
@@ -542,6 +542,7 @@ Solo gli errori bloccano il run. Gli avvisi restano registrati nel log del run.
 - **Mancata convergenza.** Il messaggio indica periodo, timestep e celle con i residui maggiori. Suggerisce anche cosa provare: attivare Newton, ridurre il passo, controllare le celle che si asciugano.
 - **Listing file.** Il listing file di MF6 viene analizzato; errori e avvisi di MF6 arrivano all'utente in forma leggibile.
 - **Fallback.** Se libmf6 non è disponibile, il run usa l'eseguibile `mf6`, senza monitor dettagliato.
+- **M1a (ADR 0014).** `build` scrive i file MF6 e il manifest in una cartella nuova, solo se `check` non trova errori; `run` aggiunge l'esecuzione con l'eseguibile `mf6`, eventi `progress` per ogni passo e la lettura del listing (terminazione, errori di input, mancata convergenza) e dell'errore di bilancio per passo. Una cartella di run esistente non viene mai sovrascritta. modflowapi, istantanee e stop arrivano con M7.
 - **Run di tracciamento.** PRT gira come simulazione separata, che legge carichi e flussi di un run di flusso completato tramite l'interfaccia FMI. Ha un proprio `run_id` e un manifest che rimanda al run di flusso.
 
 ---
@@ -853,7 +854,7 @@ Regole:
 
 **Accettazione:** superfici interpolate con incertezza su un caso reale, confrontate con i raster esistenti.
 
-**Stato attuale:** M1a in corso. Completati gli incrementi 1 (scheletro del repository, ambiente, CI), 2 (unità, errori, eventi JSON), 3 (formato del progetto, comandi `new`, `info`, `schema`, `migrate`) 4 (serie temporali, stress period, passi temporali, comando `calendar`), 5 (griglia DIS, superfici, layer, controlli geometrici, comando `grid`), 6 (parametri uniformi per unità, carichi iniziali costanti o da raster, comando `params`), 7 (registro delle condizioni al contorno, WEL, CHD da stazioni, RCH, comando `bc`) e 8 (registro dei controlli, ispezione per fasi con raccolta degli errori, comando `check`).
+**Stato attuale:** M1a in corso. Completati gli incrementi 1 (scheletro del repository, ambiente, CI), 2 (unità, errori, eventi JSON), 3 (formato del progetto, comandi `new`, `info`, `schema`, `migrate`) 4 (serie temporali, stress period, passi temporali, comando `calendar`), 5 (griglia DIS, superfici, layer, controlli geometrici, comando `grid`), 6 (parametri uniformi per unità, carichi iniziali costanti o da raster, comando `params`), 7 (registro delle condizioni al contorno, WEL, CHD da stazioni, RCH, comando `bc`), 8 (registro dei controlli, ispezione per fasi con raccolta degli errori, comando `check`) e 9 (scrittura dei file MF6 con FloPy, manifest, esecuzione con l'eseguibile, comandi `build` e `run`).
 
 ---
 
@@ -943,3 +944,4 @@ Regole:
 | 37 | 2026-11-03 | Parametri uniformi per unità con unità di misura obbligatoria per K e Ss; Kh, Ss, Kv o Kv/Kh obbligatori, Sy solo per le unità convertibili; intervalli plausibili generali come avviso; carichi iniziali costanti o da raster, avviso solo sotto l'ultima cella attiva (ADR 0011) | Nessun default silenzioso su grandezze dimensionali; avvisi solo su condizioni anomale | Unità vuota come unità interna; Kv = Kh di default; intervalli per litologia prima di M8; avviso su ogni cella sotto la base |
 | 38 | 2026-11-03 | Registro `BoundaryConditionType`; intersezioni con shapely su celle chiuse; WEL ripartito per trasmissività dei tratti filtrati (anticipato da M3); CHD interpolato per progressiva con serie combinate sull'unione delle date, attivazione dell'intera linea, solo layer con base sotto il carico minimo, prima feature nelle sovrapposizioni; RCH alla cella attiva più alta con frazione d'area; moltiplicatori in AUXMULTNAME (ADR 0012) | Vincoli di MF6 verificati (CHD sotto la base e CHD doppi rifiutati, righe WEL/RCH multiple accettate); volumi e carichi esatti nel tempo | FloPy GridIntersect; carico costante nel periodo; stazione più vicina; CHD su tutti i layer; errore sulle sovrapposizioni CHD |
 | 39 | 2026-11-03 | Ispezione per fasi con dipendenze, errori raccolti per riga, unità e feature in `check` e primo errore negli altri comandi, registro `Check` con fasi richieste, controlli del modello (stazionario senza carichi imposti, pozzi in celle CHD, ordine di grandezza di portate e ricarica, Newton con unità convertibili) (ADR 0013) | Elenco completo degli errori in un solo passaggio; nessun risultato intermedio inventato | Arresto al primo errore; fasi eseguite con parametri provvisori; soglie per litologia prima di M2 e M8 |
+| 40 | 2026-11-03 | Build solo senza errori di `check`; cartelle di run mai sovrascritte; file MF6 con FloPy a 15 cifre significative; blocchi PERIOD solo ai cambiamenti; file TS per insiemi di date comuni; preset IMS con tolleranze comuni; esecuzione con l'eseguibile, eventi `progress` e lettura del listing e del bilancio per passo (ADR 0014) | Carichi CHD esatti entro 10⁻⁹ m, portate e ricarica esatte, verificati con MF6; nessun risultato perso | modflowapi in M1a; precisione di default di FloPy; un file TS per serie; sovrascrittura dei run |
