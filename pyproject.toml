@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "phrear"
+dynamic = ["version"]
+description = "Groundwater modelling platform for QGIS built on MODFLOW 6"
+readme = "README.md"
+license = "EUPL-1.2"
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
+authors = [{ name = "Michele" }]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Hydrology",
+]
+# Runtime dependencies are managed by pixi from conda-forge (pixi.toml).
+# Declaring them for pip installs is part of the distribution milestone (M6).
+dependencies = []
+
+[project.scripts]
+phrear = "phrear.cli:main"
+
+[tool.hatch.version]
+path = "src/phrear/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/phrear"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+markers = [
+    "engine: tests that execute the MODFLOW 6 executable",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+extend-exclude = [".pixi"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "N", "SIM", "RUF", "PTH"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+files = ["src", "tests"]
+mypy_path = "src"

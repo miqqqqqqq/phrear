@@ -1,0 +1,24 @@
+# pixi environments
+.pixi/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# regenerable project outputs (docs/SPEC.md, section 8)
+runs/
+exports/
+
+# editors and OS
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

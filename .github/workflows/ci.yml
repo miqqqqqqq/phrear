@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    name: lint, type check, tests (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: prefix-dev/setup-pixi@v0.8.1
+        with:
+          pixi-version: v0.84.0
+          locked: true
+          cache: true
+      - name: Lint
+        run: pixi run lint
+      - name: Type check
+        run: pixi run typecheck
+      - name: Tests
+        run: pixi run test

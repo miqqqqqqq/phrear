@@ -1,0 +1,48 @@
+[workspace]
+name = "phrear"
+channels = ["conda-forge"]
+# win-64 is the supported platform; linux-64 is used for development only.
+platforms = ["win-64", "linux-64"]
+requires-pixi = ">=0.84"
+# The only PyPI dependency is the local editable package, which declares no
+# dependencies of its own, so the conda-to-PyPI name mapping is not needed.
+# Revisit when pip dependencies are introduced (docs/adr/0001).
+conda-pypi-map = false
+
+[dependencies]
+python = "3.12.*"
+# Numerical engine, pinned: every run manifest records this version.
+modflow6 = "==6.8.1"
+flopy = ">=3.9"
+numpy = ">=2.0"
+pandas = ">=2.2"
+xarray = ">=2024.10"
+netcdf4 = ">=1.7"
+geopandas = ">=1.0"
+shapely = ">=2.0"
+pyogrio = ">=0.10"
+rasterio = ">=1.4"
+pyproj = ">=3.7"
+xugrid = ">=0.12"
+pint = ">=0.24"
+pydantic = ">=2.9"
+matplotlib-base = ">=3.9"
+
+[pypi-dependencies]
+phrear = { path = ".", editable = true }
+
+[feature.dev.dependencies]
+pytest = ">=8.3"
+ruff = ">=0.8"
+mypy = ">=1.13"
+pre-commit = ">=4.0"
+
+[environments]
+default = ["dev"]
+
+[tasks]
+test = "pytest"
+lint = "ruff check . && ruff format --check ."
+format = "ruff format . && ruff check --fix ."
+typecheck = "mypy"
+check = { depends-on = ["lint", "typecheck", "test"] }
