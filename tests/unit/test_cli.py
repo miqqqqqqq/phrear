@@ -9,8 +9,9 @@ import json
 import pytest
 
 from phrear import __version__, cli
+from phrear.commands import Context
 from phrear.errors import UnitError
-from phrear.events import EventSink, MemorySink
+from phrear.events import MemorySink
 
 
 def test_version_flag_prints_version(capsys: pytest.CaptureFixture[str]) -> None:
@@ -54,7 +55,7 @@ def _register(monkeypatch: pytest.MonkeyPatch, handler: cli.Handler) -> None:
 
 
 def test_command_events_wrap_a_successful_handler(monkeypatch: pytest.MonkeyPatch) -> None:
-    def handler(args: argparse.Namespace, sink: EventSink | None) -> int:
+    def handler(args: argparse.Namespace, ctx: Context) -> int:
         return cli.EXIT_OK
 
     _register(monkeypatch, handler)
@@ -65,7 +66,7 @@ def test_command_events_wrap_a_successful_handler(monkeypatch: pytest.MonkeyPatc
 
 
 def test_input_error_becomes_command_failed(monkeypatch: pytest.MonkeyPatch) -> None:
-    def handler(args: argparse.Namespace, sink: EventSink | None) -> int:
+    def handler(args: argparse.Namespace, ctx: Context) -> int:
         raise UnitError("unit.unknown", unit="xyz")
 
     _register(monkeypatch, handler)
@@ -77,7 +78,7 @@ def test_input_error_becomes_command_failed(monkeypatch: pytest.MonkeyPatch) -> 
 
 
 def test_unexpected_exception_is_internal_error(monkeypatch: pytest.MonkeyPatch) -> None:
-    def handler(args: argparse.Namespace, sink: EventSink | None) -> int:
+    def handler(args: argparse.Namespace, ctx: Context) -> int:
         raise RuntimeError("boom")
 
     _register(monkeypatch, handler)
@@ -87,10 +88,12 @@ def test_unexpected_exception_is_internal_error(monkeypatch: pytest.MonkeyPatch)
 
 
 def test_run_command_without_sink_returns_handler_code() -> None:
-    def handler(args: argparse.Namespace, sink: EventSink | None) -> int:
+    def handler(args: argparse.Namespace, ctx: Context) -> int:
         return 7
 
-    assert cli.run_command("x", handler, argparse.Namespace(), None) == 7
+    text_ctx = Context(sink=None, lang="it", out=io.StringIO())
+    assert cli.run_command("x", handler, argparse.Namespace(), text_ctx) == 7
     sink = MemorySink()
-    assert cli.run_command("x", handler, argparse.Namespace(), sink) == 7
+    json_ctx = Context(sink=sink, lang="it", out=io.StringIO())
+    assert cli.run_command("x", handler, argparse.Namespace(), json_ctx) == 7
     assert len(sink.events) == 2

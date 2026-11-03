@@ -26,6 +26,8 @@ pyproj = ">=3.7"
 xugrid = ">=0.12"
 pint = ">=0.24"
 pydantic = ">=2.9"
+# Reading and writing project.toml while preserving the user's comments (ADR 0007).
+tomlkit = ">=0.13"
 matplotlib-base = ">=3.9"
 
 [pypi-dependencies]
@@ -36,6 +38,7 @@ pytest = ">=8.3"
 ruff = ">=0.8"
 mypy = ">=1.13"
 pre-commit = ">=4.0"
+pandas-stubs = ">=2.2"
 
 [environments]
 default = ["dev"]

@@ -10,6 +10,8 @@ Ogni decisione presa durante lo sviluppo ha un file numerato in questa cartella 
 | [0004](0004-dipendenze-iniziali.md) | Dipendenze iniziali e loro licenze | accettata | – |
 | [0005](0005-unita-interne.md) | Unità interne e convenzioni sulle unità | accettata | 31 |
 | [0006](0006-protocollo-eventi.md) | Protocollo degli eventi, errori e codici di uscita | accettata | 32 |
+| [0007](0007-project-toml.md) | project.toml: pydantic e tomlkit | accettata | 33 |
+| [0008](0008-schema-geopackage-v1.md) | Schema GeoPackage versione 1 | accettata | 34 |
 
 ## Modello
 

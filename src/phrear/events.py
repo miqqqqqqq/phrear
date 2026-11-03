@@ -98,6 +98,14 @@ class CommandFailed(_EventBase):
     error: Problem
 
 
+class Result(_EventBase):
+    """Structured output of a command (for example the summary printed by ``info``)."""
+
+    event: Literal["result"] = "result"
+    command: str
+    data: dict[str, Any]
+
+
 class Progress(_EventBase):
     event: Literal["progress"] = "progress"
     stage: str
@@ -176,6 +184,7 @@ AnyEvent = (
     CommandStarted
     | CommandCompleted
     | CommandFailed
+    | Result
     | Progress
     | WarningEvent
     | ErrorEvent

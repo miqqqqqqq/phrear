@@ -69,6 +69,71 @@ CATALOG: dict[str, Message] = {
         hint_it="Controlla l'unità indicata e il campo a cui si riferisce.",
         hint_en="Check the unit and the field it refers to.",
     ),
+    "project.exists": Message(
+        it="La cartella «{path}» esiste e non è vuota.",
+        en="Folder '{path}' exists and is not empty.",
+        hint_it="Scegli una cartella nuova o vuota per il progetto.",
+        hint_en="Choose a new or empty folder for the project.",
+    ),
+    "project.not_found": Message(
+        it="In «{path}» non c'è un progetto, perché manca project.toml.",
+        en="'{path}' is not a project, because project.toml is missing.",
+        hint_it="Indica la cartella che contiene project.toml, oppure crea un progetto "
+        "con «phrear new».",
+        hint_en="Give the folder that contains project.toml, or create a project "
+        "with 'phrear new'.",
+    ),
+    "project.config_syntax": Message(
+        it="Il file project.toml contiene un errore di sintassi. {reason}",
+        en="project.toml has a syntax error. {reason}",
+        hint_it="Controlla virgolette, parentesi quadre e date nel formato AAAA-MM-GG.",
+        hint_en="Check quotes, square brackets and dates in the YYYY-MM-DD format.",
+    ),
+    "project.config_invalid": Message(
+        it="Valore non valido in project.toml, alla voce «{location}». {reason}",
+        en="Invalid value in project.toml at '{location}'. {reason}",
+        hint_it="Correggi la voce indicata e riprova.",
+        hint_en="Fix the entry and try again.",
+    ),
+    "project.crs_unknown": Message(
+        it="Il codice EPSG:{epsg} non corrisponde a nessun sistema di riferimento noto.",
+        en="EPSG:{epsg} is not a known coordinate reference system.",
+        hint_it="Usa per esempio EPSG:7791 (RDN2008 / UTM 32N) o EPSG:7792 (UTM 33N).",
+        hint_en="Use for example EPSG:7791 (RDN2008 / UTM 32N) or EPSG:7792 (UTM 33N).",
+    ),
+    "project.crs_not_metric": Message(
+        it="Il sistema EPSG:{epsg} ({crs_name}) non è proiettato in metri.",
+        en="EPSG:{epsg} ({crs_name}) is not a projected system in metres.",
+        hint_it="Il modello lavora in metri. Usa per esempio EPSG:7791 (RDN2008 / UTM 32N) "
+        "o EPSG:7792 (UTM 33N).",
+        hint_en="The model works in metres. Use for example EPSG:7791 (RDN2008 / UTM 32N) "
+        "or EPSG:7792 (UTM 33N).",
+    ),
+    "project.schema_too_new": Message(
+        it="Il progetto usa lo schema {found}, più recente di quello supportato ({supported}).",
+        en="The project uses schema {found}, newer than the supported one ({supported}).",
+        hint_it="Aggiorna Phrear alla versione che ha creato il progetto o successiva.",
+        hint_en="Update Phrear to the version that created the project or later.",
+    ),
+    "project.migration_required": Message(
+        it="Il progetto usa lo schema {found}, mentre questa versione usa lo schema {supported}.",
+        en="The project uses schema {found}, while this version uses schema {supported}.",
+        hint_it="Esegui «phrear migrate», che prima crea una copia di backup del progetto.",
+        hint_en="Run 'phrear migrate', which first makes a backup copy of the project.",
+    ),
+    "project.gpkg_missing": Message(
+        it="Nel progetto «{path}» manca il file model.gpkg.",
+        en="Project '{path}' has no model.gpkg file.",
+        hint_it="Ripristina il file da una copia di backup o ricrea il progetto.",
+        hint_en="Restore the file from a backup or recreate the project.",
+    ),
+    "project.gpkg_tables_missing": Message(
+        it="Nel file model.gpkg mancano le tabelle {tables}.",
+        en="model.gpkg lacks the tables {tables}.",
+        hint_it="Il file è stato modificato fuori da Phrear o è danneggiato. Ripristina "
+        "una copia di backup.",
+        hint_en="The file was changed outside Phrear or is damaged. Restore a backup copy.",
+    ),
     "internal.unexpected": Message(
         it="Errore interno imprevisto.",
         en="Unexpected internal error.",
@@ -148,6 +213,12 @@ class UnitError(PhrearError):
     """Unit of measure missing, unknown or incompatible with the quantity."""
 
     prefix = "unit."
+
+
+class ProjectError(PhrearError):
+    """Project folder, project.toml or GeoPackage missing, invalid or outdated."""
+
+    prefix = "project."
 
 
 class InternalError(PhrearError):

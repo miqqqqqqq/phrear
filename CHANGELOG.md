@@ -14,3 +14,6 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versio
 - `phrear.errors`: error catalogue with stable codes, messages and hints in Italian and English, object references.
 - `phrear.events`: event protocol version 1, JSON Lines UTF-8 on a binary stream, JSON Schema export (ADR 0006).
 - CLI: `--json` and `--lang` options, usage and runtime errors reported as events, exit codes 0–3, subcommand registry.
+- Project format (schema 1): `project.toml` validated with pydantic and written with tomlkit keeping comments (ADR 0007); GeoPackage with the M1a tables, unique indexes, timestamp triggers and the ST_* functions needed by the R-tree triggers (ADR 0008).
+- Content hashes of settings, GeoPackage tables and rasters; migration framework with backup.
+- Commands `new`, `info`, `schema` (data schema and event protocol as JSON) and `migrate`; `result` event.

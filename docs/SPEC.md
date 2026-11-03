@@ -260,11 +260,11 @@ nome_progetto/
 
 - `schema_version`, `software_version_created`, `software_version_last_saved`.
 - `crs`: codice EPSG del progetto. Default RDN2008/UTM 32N (EPSG:7791) oppure 33N (EPSG:7792), con assi in ordine E-N; i codici 6707 e 6708 hanno ordine N-E.
-- `units.input`: unità preferite per inserimento e visualizzazione di portate, lunghezze e tempi.
+- `units`: unità preferite per inserimento e visualizzazione (`discharge`, `conductivity`, `recharge`, `storage`), ciascuna controllata contro la sua grandezza.
 - `model.start_date`, `model.end_date`, `model.steady_initial` (booleano), `model.steady_reference` (inizio e fine del periodo di riferimento per le medie del periodo stazionario; se assente si usano i valori alla `start_date`), `model.period_breaks` (date dei cambi di regime indicate dall'utente).
 - `dem`: raster del DEM e riferimento verticale.
 - `initial_heads`: modalità (costante, raster, interpolazione delle misure alla `start_date`, risultato di un run precedente) con il relativo valore, raster o `run_id`.
-- `grid`: tipo, dimensione base, rotazione, origine, regole di raffinamento.
+- `grid`: tipo, dimensione base, rotazione, origine, spessore minimo (`min_thickness_m`, default 0,5 m); regole di raffinamento da M4.
 - `solver`: preset standard, robusto oppure esperto con le opzioni IMS. Con Newton o XT3D il preset usa BICGSTAB.
 - `options.newton`: formulazione di Newton; default attivo per falde freatiche [DA CONFERMARE].
 - `options.xt3d`: automatico per le griglie quadtree (sezione 14).
@@ -276,20 +276,20 @@ Campi comuni a tutti i layer di feature: `fid`, `name`, `active`, `notes`, `crea
 | Layer o tabella | Geometria | Campi principali |
 |---|---|---|
 | `domain` | Poligono | contorno attivo del modello |
-| `hydro_units` | – | `order`, `name`, `geometry_mode` (raster/sondaggi/mista), `param_mode` (uniforme/zone/raster/interpolato), `convertible`; i valori dei parametri stanno in `param_values` |
-| `surfaces` | – | `index` (0 = top del modello; i = bottom dell'unità i), `raster_path`, `source`, `vertical_datum` |
+| `hydro_units` | – | `position` (1 = unità più alta), `name`, `geometry_mode` (raster/sondaggi/mista), `param_mode` (uniforme/zone/raster/interpolato), `convertible`, `sublayers`; i valori dei parametri stanno in `param_values` |
+| `surfaces` | – | `surface_index` (0 = top del modello; i = bottom dell'unità i), `raster_path`, `source`, `vertical_datum` |
 | `param_zones` | Poligono | `unit_id`; i valori stanno in `param_values` |
 | `param_values` | – | `object_type` (unità, zona), `object_id`, `param` (kh, kv, anisotropy, ss, sy, ne, …), `value` oppure `raster_path`, `unit`, `source`, `min`, `max`, `std_log10` |
 | `field_tests` | Punto | `type` (pompaggio, slug, Lefranc, Lugeon, granulometria), `result_param` (T, K, S), `value`, `unit`, `screen_top`, `screen_bottom`, `z_ref`, `depth_mode`, `ref_thickness` (spessore usato nell'interpretazione), `static_level` (livello statico alla data della prova), `unit_id`, `date`, `reliability` |
 | `boreholes` | Punto | `code`, `z_collar`, `depth`, `source`, `reliability` |
 | `borehole_intervals` | – | `borehole_id`, `from_depth`, `to_depth`, `description` (testo originale), `lith_class`, `unit_id` |
-| `wells` | Punto | `role` (estrazione, iniezione), `screen_top`, `screen_bottom`, `z_ref`, `depth_mode` (profondità/quota), `radius`, `model_as` (auto/WEL/MAW), `series_id` oppure `rate` costante |
+| `wells` | Punto | `role` (estrazione, iniezione), `screen_top`, `screen_bottom`, `z_ref`, `depth_mode` (profondità/quota), `radius`, `model_as` (auto/WEL/MAW), `series_id` oppure `rate` costante con `rate_unit` |
 | `rivers` | Linea o poligono | `width`, `bed_thickness`, `bed_k`; livello e quota del fondo in `line_stations` |
 | `drains` | Linea | `conductance_mode` (fisica/diretta), parametri fisici; quota in `line_stations` |
-| `fixed_heads` | Linea o poligono | `type` (carico imposto/carico generale), parametri di conduttanza per GHB; carico in `line_stations` |
-| `line_stations` | Punto | `feature_layer`, `feature_id`, `chainage` (progressiva in m, calcolata dalla posizione), `series_id` (livello o carico), `bed_bottom` o `elevation`; una sola stazione equivale a un valore uniforme |
+| `fixed_head_lines`, `fixed_head_areas` | Linea; poligono | `top_unit`, `bottom_unit` (unità interessate; vuoto = tutte); carico in `line_stations`. Da M3: `type` (carico imposto/carico generale) e parametri di conduttanza per GHB |
+| `line_stations` | Punto | `feature_layer`, `feature_id`, `chainage` (progressiva in m, calcolata dalla posizione), `value` costante oppure `series_id` (livello o carico); da M3 `bed_bottom` o `elevation`; una sola stazione equivale a un valore uniforme |
 | `barriers` | Linea | `k`, `thickness`, `top`, `bottom` |
-| `recharge_zones` | Poligono | `rate_series_id` |
+| `recharge_zones` | Poligono | `rate` costante con `rate_unit`, oppure `series_id` |
 | `distributed_inputs` | – | `kind` (ricarica, ET massima), `raster_path`, `unit`, `multiplier_series_id` |
 | `et_zones` | Poligono | `surface` (default DEM), `max_rate_series_id`, `extinction_depth` |
 | `budget_zones` | Poligono | `zone_name`, layer interessati |
@@ -299,7 +299,7 @@ Campi comuni a tutti i layer di feature: `fid`, `name`, `active`, `notes`, `crea
 | `timeseries_values` | – | `series_id`, `datetime`, `value` |
 | `obs_measurements` | – | `observation_id`, `datetime`, `value`, `value_type` (quota/soggiacenza), `quality` |
 | `scenarios` | – | `scenario_id`, `name`, `description` |
-| `scenario_changes` | – | `scenario_id`, `layer`, `fid`, `action` (disattiva/modifica), `field`, `value` |
+| `scenario_changes` | – | `scenario_id`, `target_layer`, `target_fid`, `action` (disattiva/modifica), `field`, `value` |
 | `change_log` | – | modifiche strutturali al progetto: migrazioni, import |
 
 Regole:
@@ -309,7 +309,8 @@ Regole:
 - **Quote di riferimento.** Per pozzi, piezometri e prove `depth_mode` indica se filtri e misure sono espressi in profondità da `z_ref` o in quota. La conversione avviene in `build`.
 - **Scenari.** Il modello base è l'insieme delle feature con `scenario_id` vuoto. Uno scenario aggiunge feature proprie e registra in `scenario_changes` le feature del modello base disattivate o modificate. Il core costruisce il modello di uno scenario applicando le differenze al modello base.
 - **Hash di contenuto.** Per ogni tabella si calcola un hash del contenuto (righe ordinate per `fid`, geometrie in WKB), esclusa `layer_styles`; per i raster si usa l'hash del file. Gli hash servono al manifest (sezione 16) e allo stato "modificato dall'ultimo run" (sezione 3.1).
-- **Schema unico.** Lo schema è definito in un unico modulo (`project/schema.py`). Creazione, validazione, export JSON e migrazioni derivano tutte da lì.
+- **Schema unico.** Lo schema è definito in un unico modulo (`project/schema.py`). Creazione, validazione, export JSON e migrazioni derivano tutte da lì. L'elenco completo dei campi, con tipi, unità, default ed etichette, si ottiene con `phrear schema`. La tabella sopra ne è una sintesi e in caso di differenza prevale lo schema (ADR 0008).
+- **Layer per tipo di geometria.** Le feature che possono essere linee o poligoni hanno un layer per ciascun tipo, perché QGIS digitalizza un solo tipo di geometria per layer (ADR 0008).
 
 ---
 
@@ -822,7 +823,7 @@ Regole:
 
 **Accettazione:** superfici interpolate con incertezza su un caso reale, confrontate con i raster esistenti.
 
-**Stato attuale:** M1a in corso. Completati l'incremento 1 (scheletro del repository, ambiente, CI) e l'incremento 2 (unità, errori, eventi JSON).
+**Stato attuale:** M1a in corso. Completati gli incrementi 1 (scheletro del repository, ambiente, CI), 2 (unità, errori, eventi JSON) e 3 (formato del progetto, comandi `new`, `info`, `schema`, `migrate`).
 
 ---
 
@@ -905,3 +906,5 @@ Regole:
 | 30 | 2026-11-03 | CLI con argparse (ADR 0002) | Nessuna dipendenza; controllo diretto di stdout per gli eventi JSON | click, typer |
 | 31 | 2026-11-03 | Unità interne per grandezza, anno giuliano di 365,25 d (ADR 0005) | Conversioni esplicite e tracciabili; default di pint | Anno di 365 d; solo sintassi nativa di pint |
 | 32 | 2026-11-03 | Eventi JSON Lines UTF-8 su stdout binario, messaggi IT/EN, codici di uscita 0–3 (ADR 0006) | Indipendenza dalla codifica della console Windows; il plugin sceglie la lingua | Testo libero; una sola lingua; PYTHONIOENCODING |
+| 33 | 2026-11-03 | project.toml letto con tomllib, validato con pydantic, scritto con tomlkit (ADR 0007) | Errori con il percorso della voce; commenti dell'utente conservati | tomli-w; scrittura manuale |
+| 34 | 2026-11-03 | Schema GeoPackage v1: un layer per tipo di geometria, nomi senza parole riservate, default nello schema, timestamp da trigger, hash di contenuto canonici, migrazioni con backup (ADR 0008) | Compatibilità con la digitalizzazione di QGIS; tracciabilità senza falsi positivi | Layer `Geometry` misti; hash del file; tutte le tabelle subito |

@@ -23,10 +23,11 @@ import itertools
 import sys
 import time
 import traceback
-from collections.abc import Callable, Sequence
+from collections.abc import Sequence
 from typing import BinaryIO, NoReturn, TextIO
 
 from phrear import __version__
+from phrear.commands import COMMANDS, CommandSpec, Context, Handler
 from phrear.errors import InternalError, Lang, PhrearError, UsageError
 from phrear.events import (
     CommandCompleted,
@@ -43,22 +44,7 @@ EXIT_INPUT_ERROR = 1
 EXIT_USAGE = 2
 EXIT_INTERNAL = 3
 
-Handler = Callable[[argparse.Namespace, EventSink | None], int]
-Configure = Callable[[argparse.ArgumentParser], None]
-
-
-class CommandSpec:
-    """A subcommand: name, one-line help, argument setup and handler."""
-
-    def __init__(self, name: str, help_text: str, configure: Configure, handler: Handler) -> None:
-        self.name = name
-        self.help_text = help_text
-        self.configure = configure
-        self.handler = handler
-
-
-#: Registered subcommands, in the order shown by ``--help``.
-COMMANDS: list[CommandSpec] = []
+__all__ = ["COMMANDS", "CommandSpec", "Context", "Handler", "build_parser", "main", "run_command"]
 
 
 class _Parser(argparse.ArgumentParser):
@@ -87,14 +73,13 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def run_command(
-    command: str, handler: Handler, args: argparse.Namespace, sink: EventSink | None
-) -> int:
+def run_command(command: str, handler: Handler, args: argparse.Namespace, ctx: Context) -> int:
     """Run a subcommand handler, wrapping it in command_started/completed events."""
+    sink = ctx.sink
     if sink is not None:
         sink.emit(CommandStarted(command=command))
     start = time.perf_counter()
-    code = handler(args, sink)
+    code = handler(args, ctx)
     if sink is not None:
         sink.emit(CommandCompleted(command=command, duration_s=time.perf_counter() - start))
     return code
@@ -126,11 +111,16 @@ def main(
     *,
     stdout: BinaryIO | None = None,
     stderr: TextIO | None = None,
+    text_stdout: TextIO | None = None,
 ) -> int:
-    """Run the CLI and return the process exit code."""
+    """Run the CLI and return the process exit code.
+
+    ``stdout`` receives JSON events (binary); ``text_stdout`` the text output.
+    """
     args_list = list(sys.argv[1:] if argv is None else argv)
     out = sys.stdout.buffer if stdout is None else stdout
-    err_stream = sys.stderr if stderr is None else stderr
+    text_out = _tolerant(sys.stdout) if text_stdout is None else text_stdout
+    err_stream = _tolerant(sys.stderr) if stderr is None else stderr
     # The output mode must be known before parsing, so that usage errors
     # are reported in the right format.
     sink: EventSink | None = JsonLinesSink(out) if "--json" in args_list else None
@@ -146,7 +136,8 @@ def main(
                 parser.print_help()
             return EXIT_OK
         handler = {spec.name: spec.handler for spec in COMMANDS}[command]
-        return run_command(command, handler, args, sink)
+        ctx = Context(sink=sink, lang=lang, out=text_out)
+        return run_command(command, handler, args, ctx)
     except UsageError as error:
         _report(error, sink, lang, err_stream, command)
         return EXIT_USAGE
@@ -157,6 +148,14 @@ def main(
         internal = InternalError("internal.unexpected", detail=traceback.format_exc())
         _report(internal, sink, lang, err_stream, command)
         return EXIT_INTERNAL
+
+
+def _tolerant(stream: TextIO) -> TextIO:
+    """Avoid UnicodeEncodeError when a redirected Windows console uses cp1252."""
+    reconfigure = getattr(stream, "reconfigure", None)
+    if reconfigure is not None:
+        reconfigure(errors="replace")
+    return stream
 
 
 def _follows(args: list[str], option: str, value: str) -> bool:

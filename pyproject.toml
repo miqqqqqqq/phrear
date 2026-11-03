@@ -52,3 +52,8 @@ python_version = "3.12"
 strict = true
 files = ["src", "tests"]
 mypy_path = "src"
+
+# Libraries without type information: their objects are typed as Any.
+[[tool.mypy.overrides]]
+module = ["geopandas.*", "pyogrio.*", "shapely.*", "rasterio.*", "flopy.*", "xugrid.*"]
+ignore_missing_imports = true

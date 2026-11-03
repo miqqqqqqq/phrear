@@ -129,6 +129,7 @@ def test_json_schema_lists_every_event_type() -> None:
         "command_started",
         "command_completed",
         "command_failed",
+        "result",
         "progress",
         "warning",
         "error",
