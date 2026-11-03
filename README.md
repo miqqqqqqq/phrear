@@ -4,7 +4,25 @@ Groundwater modelling platform for QGIS built on MODFLOW 6. Successor in spirit 
 
 Piattaforma di modellazione delle acque sotterranee per QGIS basata su MODFLOW 6: prima il flusso, poi calibrazione e trasporto.
 
-**Status:** pre-alpha, milestone M1a in progress. The project specification is [docs/SPEC.md](docs/SPEC.md) (Italian).
+**Status:** pre-alpha. Milestone M1a (core, CLI, numerical verification) is complete; next is M1b, the minimal QGIS plugin. The project specification is [docs/SPEC.md](docs/SPEC.md) (Italian).
+
+Documentation (Italian):
+
+- [Guida rapida da riga di comando](docs/guida-rapida-cli.md)
+- [Guida per gli sviluppatori](docs/guida-sviluppatori.md)
+- [Report di verifica](docs/verification/report.md): Thiem, Theis, Dupuit, flusso 1D
+- [Decisioni architetturali](docs/adr/README.md)
+
+## Quick start
+
+```powershell
+pixi install
+pixi run phrear example C:\temp\esempio
+pixi run phrear check C:\temp\esempio
+pixi run phrear run C:\temp\esempio
+```
+
+The heads of the run are in `runs/<run_id>/heads.nc`, a NetCDF UGRID file that QGIS opens as a mesh layer.
 
 ## Development
 

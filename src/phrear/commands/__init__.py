@@ -3,6 +3,7 @@
 from phrear.commands import (
     bc_commands,
     check_commands,
+    example_commands,
     grid_commands,
     params_commands,
     project_commands,
@@ -16,6 +17,7 @@ from phrear.commands.base import CommandSpec, Configure, Context, Handler
 #: Registered subcommands, in the order shown by ``--help``.
 COMMANDS: list[CommandSpec] = [
     *project_commands.COMMANDS,
+    *example_commands.COMMANDS,
     *time_commands.COMMANDS,
     *grid_commands.COMMANDS,
     *params_commands.COMMANDS,

@@ -111,3 +111,13 @@ def test_locked_file(model_site: Project, monkeypatch: pytest.MonkeyPatch) -> No
     with pytest.raises(ResultsError) as info:
         write_heads(folder, read_manifest(folder), datetime(2026, 1, 1))
     assert info.value.code == "results.file_locked"
+
+
+def test_exporter_registry() -> None:
+    from phrear.errors import Localized
+    from phrear.results.exporters import EXPORTERS, Exporter, register
+
+    assert list(EXPORTERS) == ["heads"] and EXPORTERS["heads"].filename == "heads.nc"
+    clash = Exporter("heads", Localized("x", "x"), "x", "x.nc", EXPORTERS["heads"].write)
+    with pytest.raises(ValueError, match="already registered"):
+        register(clash)

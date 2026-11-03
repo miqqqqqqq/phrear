@@ -167,7 +167,7 @@ QGIS 4 + plugin ──(CLI + eventi JSON)──> core phrear ──> MODFLOW 6 (
                                viewer 3D ────┘ (legge i risultati)
 ```
 
-Comandi CLI minimi: `new`, `check`, `grid`, `params`, `bc`, `build`, `run`, `results`, `export`, `migrate`, `info`, `schema`, `calendar`, `import`, `scenario`, `verify`. Ogni comando accetta l'opzione `--json` per produrre l'output come eventi. Il comando `verify` esegue i test di verifica sull'installazione dell'utente e produce il report di affidabilità (sezione 20). Codici di uscita: 0 successo, 1 errore nell'input o nel progetto, 2 riga di comando non valida, 3 errore interno (ADR 0006).
+Comandi CLI minimi: `new`, `example`, `check`, `grid`, `params`, `bc`, `build`, `run`, `results`, `export`, `migrate`, `info`, `schema`, `calendar`, `import`, `scenario`, `verify`. Ogni comando accetta l'opzione `--json` per produrre l'output come eventi. Il comando `verify` esegue i test di verifica sull'installazione dell'utente e produce il report di affidabilità (sezione 20). Codici di uscita: 0 successo, 1 errore nell'input o nel progetto, 2 riga di comando non valida, 3 errore interno (ADR 0006).
 
 ---
 
@@ -677,7 +677,7 @@ Registri interni:
   - mappatura sullo schema interno;
   - report di import.
 - **`Check`:** id, etichette, severità, fasi richieste, funzione di controllo; messaggi e suggerimenti stanno nel catalogo degli errori (ADR 0013).
-- **`Exporter`:** formato, opzioni e funzione di scrittura.
+- **`Exporter`:** nome, etichette, formato, file prodotto e funzione di scrittura dalla cartella del run e dal manifest; `phrear export --format` sceglie tra quelli registrati (ADR 0017).
 - **`ResultProduct`:** calcolo di un prodotto (bilancio, idrogramma, zona di cattura) a partire dai file del run.
 
 Aggiungere una funzione significa scrivere un modulo che implementa l'interfaccia e registrarlo. Dove possibile, il plugin genera form e voci di menu dagli schemi JSON esportati dal core con il comando `schema`, senza codice UI dedicato.
@@ -755,6 +755,8 @@ Regole:
 - un progetto di esempio completo, eseguibile da CLI;
 - nessun import di QGIS nel core;
 - guida rapida per l'uso da CLI e guida iniziale per gli sviluppatori.
+
+**Esito (ADR 0016, 0017):** verifica superata con MF6 6.8.1 (`docs/verification/`); progetto di esempio con `phrear example` e test di regressione; isolamento del core verificato da un test; guide in `docs/guida-rapida-cli.md` e `docs/guida-sviluppatori.md`.
 
 ### M1b – Plugin minimo
 
@@ -856,7 +858,7 @@ Regole:
 
 **Accettazione:** superfici interpolate con incertezza su un caso reale, confrontate con i raster esistenti.
 
-**Stato attuale:** M1a in corso. Completati gli incrementi 1 (scheletro del repository, ambiente, CI), 2 (unità, errori, eventi JSON), 3 (formato del progetto, comandi `new`, `info`, `schema`, `migrate`) 4 (serie temporali, stress period, passi temporali, comando `calendar`), 5 (griglia DIS, superfici, layer, controlli geometrici, comando `grid`), 6 (parametri uniformi per unità, carichi iniziali costanti o da raster, comando `params`), 7 (registro delle condizioni al contorno, WEL, CHD da stazioni, RCH, comando `bc`), 8 (registro dei controlli, ispezione per fasi con raccolta degli errori, comando `check`), 9 (scrittura dei file MF6 con FloPy, manifest, esecuzione con l'eseguibile, comandi `build` e `run`), 10 (carichi in NetCDF UGRID, comando `export`) e 11 (verifica con Thiem, Theis, Dupuit e flusso 1D, comando `verify`).
+**Stato attuale:** M1a completata il 2026-11-03 in 12 incrementi: scheletro e CI; unità, errori ed eventi; formato del progetto; tempo; griglia e superfici; parametri e carichi iniziali; condizioni al contorno; controlli; build e run; export NetCDF UGRID; verifica analitica; progetto di esempio e guide. Prossima milestone M1b (plugin minimo).
 
 ---
 
@@ -949,3 +951,4 @@ Regole:
 | 40 | 2026-11-03 | Build solo senza errori di `check`; cartelle di run mai sovrascritte; file MF6 con FloPy a 15 cifre significative; blocchi PERIOD solo ai cambiamenti; file TS per insiemi di date comuni; preset IMS con tolleranze comuni; esecuzione con l'eseguibile, eventi `progress` e lettura del listing e del bilancio per passo (ADR 0014) | Carichi CHD esatti entro 10⁻⁹ m, portate e ricarica esatte, verificati con MF6; nessun risultato perso | modflowapi in M1a; precisione di default di FloPy; un file TS per serie; sovrascrittura dei run |
 | 41 | 2026-11-03 | Carichi in NetCDF UGRID dalla griglia binaria e dai carichi del run: una faccia per colonna, una variabile per layer, celle asciutte mancanti, carico della prima cella satura, tempo dalla data di inizio, CRS anche negli attributi di MDAL, scrittura atomica (ADR 0015) | Mesh layer di QGIS con dimensione temporale; export coerente con il run anche se il progetto cambia | Variabile unica (tempo, layer, faccia); carichi delle celle asciutte; griglia ricostruita dal progetto |
 | 42 | 2026-11-03 | Casi di verifica costruiti come progetti Phrear completi (catena intera: GeoPackage, controlli, build, run); punti ad almeno 3 celle dal pozzo; errore massimo su s_max per i casi con pozzo, assoluto per il flusso 1D; E₁ propria; comando `verify` con report, grafici e JSON in una cartella nuova (ADR 0016) | Verifica di Phrear, non solo di MF6; prova di affidabilità rigenerabile dall'utente | Modelli FloPy scritti a mano; scipy per E₁; confronto nella cella pozzo |
+| 43 | 2026-11-03 | Progetto di esempio generato dal codice (`phrear example`) con test di regressione sui carichi; registro `Exporter` con `heads` come primo exporter; guide CLI e sviluppatori; M1a chiusa (ADR 0017) | Nessun binario nel repository, esempio sempre allineato allo schema; criteri di accettazione di M1a soddisfatti | Esempio salvato come file; sito reale prima della verifica tra M3 e M4 |

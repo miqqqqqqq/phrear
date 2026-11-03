@@ -25,7 +25,7 @@ from phrear.modflow.pipeline import (
 )
 from phrear.modflow.runner import RunOutcome
 from phrear.project import Project
-from phrear.results.netcdf import write_heads
+from phrear.results.exporters import EXPORTERS
 
 
 def _configure(parser: argparse.ArgumentParser) -> None:
@@ -138,8 +138,9 @@ def _run(args: argparse.Namespace, ctx: Context) -> int:
     for problem in outcome_warnings(run, outcome):
         ctx.warn(problem)
     data = _run_data(run, outcome)
+    heads = EXPORTERS["heads"]
     data["heads"] = str(
-        write_heads(run.folder, read_manifest(run.folder), datetime.now().astimezone())
+        heads.write(run.folder, read_manifest(run.folder), datetime.now().astimezone())
     )
     ctx.result("run", data, _run_text(data, ctx.lang))
     return 0

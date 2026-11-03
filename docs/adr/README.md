@@ -20,6 +20,7 @@ Ogni decisione presa durante lo sviluppo ha un file numerato in questa cartella 
 | [0014](0014-build-e-run-mf6.md) | Build e run di MODFLOW 6 in M1a | accettata | 40 |
 | [0015](0015-export-carichi-netcdf-ugrid.md) | Export dei carichi in NetCDF UGRID | accettata | 41 |
 | [0016](0016-verifica-analitica.md) | Verifica con soluzioni analitiche e comando `verify` | accettata | 42 |
+| [0017](0017-esempio-e-chiusura-m1a.md) | Progetto di esempio, registro degli exporter, chiusura di M1a | accettata | 43 |
 
 ## Modello
 
