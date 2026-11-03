@@ -37,6 +37,8 @@ addopts = "-ra --strict-markers"
 markers = [
     "engine: tests that execute the MODFLOW 6 executable",
 ]
+# Harmless ABI notice of cftime (used by netCDF4) built against an older numpy.
+filterwarnings = ["ignore:numpy.ndarray size changed:RuntimeWarning"]
 
 [tool.ruff]
 line-length = 100

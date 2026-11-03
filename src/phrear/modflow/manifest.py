@@ -63,6 +63,18 @@ def manifest_data(
         "settings": project.config.model_dump(mode="json"),
         "model": {
             **{k: v for k, v in ins.grid.summary().items() if k != "layers"},
+            "layers": [
+                {
+                    "layer": k + 1,
+                    "unit": position,
+                    "convertible": next(
+                        u.convertible for u in ins.grid.units if u.position == position
+                    ),
+                }
+                for k, position in enumerate(ins.grid.layer_unit)
+            ],
+            "start_date": ins.timeline.calendar.start.isoformat(),
+            "offset_d": ins.timeline.calendar.offset_d,
             "periods": len(ins.timeline.calendar.periods),
             "entries": simulation.entries,
             "series": simulation.series,

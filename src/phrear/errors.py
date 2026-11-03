@@ -737,6 +737,30 @@ CATALOG: dict[str, Message] = {
         hint_en="Above 1 % the results should be used with care; tighten the solver "
         "tolerances or shorten the steps.",
     ),
+    "results.no_run": Message(
+        it="Nel progetto non c'è un run completato.",
+        en="The project has no completed run.",
+        hint_it="Esegui prima phrear run.",
+        hint_en="Run phrear run first.",
+    ),
+    "results.run_not_found": Message(
+        it="Il run «{run_id}» non esiste in {path}.",
+        en="Run '{run_id}' does not exist in {path}.",
+        hint_it="Controlla il nome in runs/ oppure ometti --run per usare l'ultimo run completato.",
+        hint_en="Check the name in runs/ or omit --run to use the latest completed run.",
+    ),
+    "results.not_completed": Message(
+        it="Il run «{run_id}» non è completato (stato: {status}).",
+        en="Run '{run_id}' is not completed (status: {status}).",
+        hint_it="Esegui di nuovo phrear run oppure scegli un altro run.",
+        hint_en="Run phrear run again or choose another run.",
+    ),
+    "results.file_locked": Message(
+        it="Non riesco a sostituire {path}; probabilmente è aperto in un altro programma.",
+        en="Cannot replace {path}; it is probably open in another program.",
+        hint_it="Rimuovi il layer da QGIS, o chiudi il programma che lo usa, e ripeti l'export.",
+        hint_en="Remove the layer from QGIS, or close the program using it, and export again.",
+    ),
     "init.missing": Message(
         it="Mancano i carichi iniziali.",
         en="The initial heads are missing.",
@@ -900,6 +924,12 @@ class RunError(PhrearError):
     """Build or execution of a MODFLOW 6 run that cannot be completed."""
 
     prefix = "run."
+
+
+class ResultsError(PhrearError):
+    """Results of a run that cannot be read or exported."""
+
+    prefix = "results."
 
 
 class ErrorCollector:

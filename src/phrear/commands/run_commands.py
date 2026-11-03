@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +13,7 @@ from phrear.commands.base import CommandSpec, Context
 from phrear.commands.check_commands import emit_problems, print_problems, raise_if_errors
 from phrear.errors import Lang
 from phrear.events import Problem, Progress, RunCompleted, RunFailed, RunStarted, Text
+from phrear.modflow.manifest import read_manifest
 from phrear.modflow.pipeline import (
     BuiltRun,
     build_run,
@@ -23,6 +25,7 @@ from phrear.modflow.pipeline import (
 )
 from phrear.modflow.runner import RunOutcome
 from phrear.project import Project
+from phrear.results.netcdf import write_heads
 
 
 def _configure(parser: argparse.ArgumentParser) -> None:
@@ -80,14 +83,14 @@ def _run_text(data: dict[str, Any], lang: Lang) -> str:
                 f"; errore di bilancio massimo {worst['pct']:.2g} % "
                 f"(periodo {worst['period']}, passo {worst['step']})"
             )
-        return text + f"\nRisultati in {data['folder']}"
+        return text + f"\nRisultati in {data['folder']}; carichi in {data['heads']}"
     text = f"Run {data['run_id']} completed in {data['duration_s']:.1f} s"
     if worst:
         text += (
             f"; largest budget error {worst['pct']:.2g} % "
             f"(period {worst['period']}, step {worst['step']})"
         )
-    return text + f"\nResults in {data['folder']}"
+    return text + f"\nResults in {data['folder']}; heads in {data['heads']}"
 
 
 def _run_data(run: BuiltRun, outcome: RunOutcome) -> dict[str, Any]:
@@ -135,6 +138,9 @@ def _run(args: argparse.Namespace, ctx: Context) -> int:
     for problem in outcome_warnings(run, outcome):
         ctx.warn(problem)
     data = _run_data(run, outcome)
+    data["heads"] = str(
+        write_heads(run.folder, read_manifest(run.folder), datetime.now().astimezone())
+    )
     ctx.result("run", data, _run_text(data, ctx.lang))
     return 0
 

@@ -18,6 +18,7 @@ Ogni decisione presa durante lo sviluppo ha un file numerato in questa cartella 
 | [0012](0012-condizioni-al-contorno-m1a.md) | Condizioni al contorno di M1a: pozzi, carichi imposti, ricarica | accettata | 38 |
 | [0013](0013-controlli-pre-run.md) | Controlli pre-run e comando `check` | accettata | 39 |
 | [0014](0014-build-e-run-mf6.md) | Build e run di MODFLOW 6 in M1a | accettata | 40 |
+| [0015](0015-export-carichi-netcdf-ugrid.md) | Export dei carichi in NetCDF UGRID | accettata | 41 |
 
 ## Modello
 
