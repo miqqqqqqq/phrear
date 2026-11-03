@@ -167,7 +167,7 @@ QGIS 4 + plugin ──(CLI + eventi JSON)──> core phrear ──> MODFLOW 6 (
                                viewer 3D ────┘ (legge i risultati)
 ```
 
-Comandi CLI minimi: `new`, `check`, `grid`, `build`, `run`, `results`, `export`, `migrate`, `info`, `schema`, `calendar`, `import`, `scenario`, `verify`. Ogni comando accetta l'opzione `--json` per produrre l'output come eventi. Il comando `verify` esegue i test di verifica sull'installazione dell'utente e produce il report di affidabilità (sezione 20). Codici di uscita: 0 successo, 1 errore nell'input o nel progetto, 2 riga di comando non valida, 3 errore interno (ADR 0006).
+Comandi CLI minimi: `new`, `check`, `grid`, `params`, `build`, `run`, `results`, `export`, `migrate`, `info`, `schema`, `calendar`, `import`, `scenario`, `verify`. Ogni comando accetta l'opzione `--json` per produrre l'output come eventi. Il comando `verify` esegue i test di verifica sull'installazione dell'utente e produce il report di affidabilità (sezione 20). Codici di uscita: 0 successo, 1 errore nell'input o nel progetto, 2 riga di comando non valida, 3 errore interno (ADR 0006).
 
 ---
 
@@ -392,10 +392,25 @@ Conversioni:
 - **Da trasmissività a K.** La trasmissività di una prova di pompaggio diventa K = T / b, dove b è lo spessore usato nell'interpretazione della prova, registrato con la prova (`ref_thickness`) insieme al livello statico misurato alla data della prova. Se b manca, si stima da geometria e livello statico, con un avviso. Il carico iniziale del modello non si usa, per evitare una derivazione circolare. Il valore derivato conserva entrambi i dati di origine.
 - **Da S a Ss.** Per le unità confinate, Ss = S / b.
 
-Controlli, tutti come avviso:
-- valori fuori dagli intervalli plausibili per la classe litologica;
-- Kv maggiore di Kh;
-- Sy o n_e non plausibile.
+Obbligatori per il run (ADR 0011):
+- Kh e Ss per tutte le unità;
+- Sy per le unità convertibili;
+- esattamente uno tra Kv e Kv/Kh;
+- l'unità di misura per K e Ss; per i parametri adimensionali vuota vale 1 e `%` vale 0,01;
+- n_e da M5.
+
+Controlli bloccanti:
+- parametro o unità di misura mancante;
+- K o Ss non positivi;
+- Sy o n_e fuori da (0, 1);
+- Kv e Kv/Kh indicati insieme.
+
+Controlli come avviso:
+- valore fuori dall'intervallo `[min, max]` dichiarato;
+- valore fuori dagli intervalli plausibili generali (K tra 10⁻¹¹ e 10⁻¹ m/s, Kv/Kh tra 10⁻⁴ e 10, Ss tra 10⁻⁷ e 10⁻² 1/m, Sy tra 0,01 e 0,40, n_e tra 0,01 e 0,50); da M8 per classe litologica;
+- Kv maggiore di Kh.
+
+Il comando `params` mostra per ogni unità valore originale, valore nelle unità interne e origine.
 
 ---
 
@@ -483,7 +498,8 @@ Elenco iniziale:
   - CHD nella stessa cella di altre condizioni.
   - Serie temporali che non coprono il periodo simulato.
 - **Condizioni iniziali.**
-  - Carichi iniziali sotto il bottom della cella (avviso).
+  - Carichi iniziali sotto la base dell'ultima cella attiva della colonna (avviso). Sotto la base di una cella convertibile superiore il carico è normale (ADR 0011).
+  - Raster dei carichi che non copre le celle attive (errore).
 - **Tempo.**
   - Periodi troppo brevi.
   - Nessuna osservazione nel periodo simulato (avviso).
@@ -824,7 +840,7 @@ Regole:
 
 **Accettazione:** superfici interpolate con incertezza su un caso reale, confrontate con i raster esistenti.
 
-**Stato attuale:** M1a in corso. Completati gli incrementi 1 (scheletro del repository, ambiente, CI), 2 (unità, errori, eventi JSON), 3 (formato del progetto, comandi `new`, `info`, `schema`, `migrate`) e 4 (serie temporali, stress period, passi temporali, comando `calendar`) e 5 (griglia DIS, superfici, layer, controlli geometrici, comando `grid`).
+**Stato attuale:** M1a in corso. Completati gli incrementi 1 (scheletro del repository, ambiente, CI), 2 (unità, errori, eventi JSON), 3 (formato del progetto, comandi `new`, `info`, `schema`, `migrate`) 4 (serie temporali, stress period, passi temporali, comando `calendar`), 5 (griglia DIS, superfici, layer, controlli geometrici, comando `grid`) e 6 (parametri uniformi per unità, carichi iniziali costanti o da raster, comando `params`).
 
 ---
 
@@ -911,3 +927,4 @@ Regole:
 | 34 | 2026-11-03 | Schema GeoPackage v1: un layer per tipo di geometria, nomi senza parole riservate, default nello schema, timestamp da trigger, hash di contenuto canonici, migrazioni con backup (ADR 0008) | Compatibilità con la digitalizzazione di QGIS; tracciabilità senza falsi positivi | Layer `Geometry` misti; hash del file; tutte le tabelle subito |
 | 35 | 2026-11-03 | Serie indefinite prima della prima data (attivazione), periodo stazionario di 1 d, accorpamento dei periodi brevi, passi con moltiplicatore massimo compatibile con primo e ultimo passo (ADR 0009) | Volumi conservati esattamente, verificati con MF6; nessuna estrapolazione silenziosa | Unione dei punti di cambio; valore a inizio passo; nstp e tsmult fissi |
 | 36 | 2026-11-03 | Griglia DIS con convenzioni MF6; superfici come media sulla cella della bilineare; copertura stretta; raster nel CRS del progetto; superfici incrociate come errore; DEM come avviso (ADR 0010) | Metodo esatto per superfici lineari a ogni rotazione; nessuna correzione silenziosa | Average di GDAL (impreciso su griglie ruotate); riproiezione automatica; troncamento degli spessori |
+| 37 | 2026-11-03 | Parametri uniformi per unità con unità di misura obbligatoria per K e Ss; Kh, Ss, Kv o Kv/Kh obbligatori, Sy solo per le unità convertibili; intervalli plausibili generali come avviso; carichi iniziali costanti o da raster, avviso solo sotto l'ultima cella attiva (ADR 0011) | Nessun default silenzioso su grandezze dimensionali; avvisi solo su condizioni anomale | Unità vuota come unità interna; Kv = Kh di default; intervalli per litologia prima di M8; avviso su ogni cella sotto la base |

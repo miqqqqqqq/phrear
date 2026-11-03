@@ -326,6 +326,114 @@ CATALOG: dict[str, Message] = {
         hint_it="Controlla il raster della superficie 0 e il riferimento verticale del DEM.",
         hint_en="Check the raster of surface 0 and the vertical datum of the DEM.",
     ),
+    "params.mode_not_available": Message(
+        it="L'unità {unit} usa l'assegnazione dei parametri «{mode}», disponibile da M2.",
+        en="Unit {unit} uses the parameter assignment '{mode}', available from M2.",
+        hint_it="Per ora imposta param_mode = uniform e un valore per parametro.",
+        hint_en="For now set param_mode = uniform and one value per parameter.",
+    ),
+    "params.source_not_available": Message(
+        it="Il parametro {param} dell'unità {unit} rimanda a {what}, disponibile da M2.",
+        en="Parameter {param} of unit {unit} refers to {what}, available from M2.",
+        hint_it="Per ora indica un valore uniforme nel campo value.",
+        hint_en="For now give a uniform value in the value field.",
+    ),
+    "params.unknown_unit": Message(
+        it="Una riga di param_values si riferisce all'unità con fid {fid}, che non esiste.",
+        en="A param_values row refers to the unit with fid {fid}, which does not exist.",
+        hint_it="Correggi object_id oppure elimina la riga.",
+        hint_en="Fix object_id or delete the row.",
+    ),
+    "params.missing": Message(
+        it="Manca il parametro {param} per l'unità {unit}.",
+        en="Parameter {param} is missing for unit {unit}.",
+        hint_it="Aggiungi una riga in param_values con object_type = unit, object_id = {fid} "
+        "e param = {param_code}.",
+        hint_en="Add a param_values row with object_type = unit, object_id = {fid} and "
+        "param = {param_code}.",
+    ),
+    "params.value_missing": Message(
+        it="La riga del parametro {param} dell'unità {unit} non ha un valore.",
+        en="The row of parameter {param} of unit {unit} has no value.",
+        hint_it="Compila il campo value.",
+        hint_en="Fill the value field.",
+    ),
+    "params.unit_missing": Message(
+        it="Il parametro {param} dell'unità {unit} non ha l'unità di misura.",
+        en="Parameter {param} of unit {unit} has no unit of measure.",
+        hint_it="Compila il campo unit, per esempio {example}.",
+        hint_en="Fill the unit field, for example {example}.",
+    ),
+    "params.kv_or_anisotropy": Message(
+        it="Per l'unità {unit} serve K verticale oppure l'anisotropia Kv/Kh.",
+        en="Unit {unit} needs either vertical K or the anisotropy Kv/Kh.",
+        hint_it="Aggiungi una riga con param = kv oppure param = anisotropy.",
+        hint_en="Add a row with param = kv or param = anisotropy.",
+    ),
+    "params.kv_and_anisotropy": Message(
+        it="Per l'unità {unit} sono indicati sia K verticale sia l'anisotropia Kv/Kh.",
+        en="Unit {unit} has both vertical K and the anisotropy Kv/Kh.",
+        hint_it="Tieni solo uno dei due, per evitare valori in contraddizione.",
+        hint_en="Keep only one of the two, to avoid contradictory values.",
+    ),
+    "params.not_positive": Message(
+        it="Il parametro {param} dell'unità {unit} deve essere positivo; vale {value}.",
+        en="Parameter {param} of unit {unit} must be positive; it is {value}.",
+        hint_it="Correggi il valore o la sua unità di misura.",
+        hint_en="Fix the value or its unit.",
+    ),
+    "params.not_fraction": Message(
+        it="Il parametro {param} dell'unità {unit} deve essere compreso tra 0 e 1; vale {value}.",
+        en="Parameter {param} of unit {unit} must be between 0 and 1; it is {value}.",
+        hint_it="Se il valore è in percentuale, indica % come unità.",
+        hint_en="If the value is a percentage, give % as unit.",
+    ),
+    "params.implausible": Message(
+        it="Il parametro {param} dell'unità {unit} vale {value} {internal}, fuori "
+        "dall'intervallo plausibile {low}–{high} {internal}.",
+        en="Parameter {param} of unit {unit} is {value} {internal}, outside the plausible "
+        "range {low}–{high} {internal}.",
+        hint_it="Controlla valore e unità di misura.",
+        hint_en="Check value and unit.",
+    ),
+    "params.kv_above_kh": Message(
+        it="Nell'unità {unit} K verticale ({kv} m/d) supera K orizzontale ({kh} m/d).",
+        en="In unit {unit} vertical K ({kv} m/d) exceeds horizontal K ({kh} m/d).",
+        hint_it="È raro nei depositi stratificati; controlla i valori.",
+        hint_en="This is rare in layered deposits; check the values.",
+    ),
+    "params.outside_declared_range": Message(
+        it="Il parametro {param} dell'unità {unit} vale {value}, fuori dall'intervallo "
+        "dichiarato [{low}, {high}] nella stessa unità di misura.",
+        en="Parameter {param} of unit {unit} is {value}, outside its declared range "
+        "[{low}, {high}] in the same unit.",
+        hint_it="Correggi il valore oppure min e max.",
+        hint_en="Fix the value or min and max.",
+    ),
+    "init.missing": Message(
+        it="Mancano i carichi iniziali.",
+        en="The initial heads are missing.",
+        hint_it='Indica [initial_heads] in project.toml, per esempio mode = "constant" e '
+        'value_m, oppure mode = "raster" e raster_path.',
+        hint_en='Set [initial_heads] in project.toml, for example mode = "constant" and '
+        'value_m, or mode = "raster" and raster_path.',
+    ),
+    "init.mode_not_available": Message(
+        it="I carichi iniziali di tipo «{mode}» non sono ancora disponibili.",
+        en="Initial heads of type '{mode}' are not available yet.",
+        hint_it='Per ora usa mode = "constant" oppure mode = "raster".',
+        hint_en='For now use mode = "constant" or mode = "raster".',
+    ),
+    "init.dry_columns": Message(
+        it="In {n_cells} colonne il carico iniziale è sotto la base dell'ultima cella attiva, "
+        "per esempio riga {row}, colonna {col}.",
+        en="In {n_cells} columns the initial head is below the bottom of the lowest active "
+        "cell, for example row {row}, column {col}.",
+        hint_it="Il periodo stazionario iniziale ricalcola i carichi, ma un valore di partenza "
+        "così basso può rallentare o impedire la convergenza.",
+        hint_en="The initial steady period recomputes the heads, but such a low starting value "
+        "may slow down or prevent convergence.",
+    ),
     "internal.unexpected": Message(
         it="Errore interno imprevisto.",
         en="Unexpected internal error.",
@@ -435,6 +543,18 @@ class GridError(PhrearError):
     """Grid that cannot be built from the settings."""
 
     prefix = "grid."
+
+
+class ParameterError(PhrearError):
+    """Hydrogeological parameters missing, inconsistent or physically impossible."""
+
+    prefix = "params."
+
+
+class InitialHeadsError(PhrearError):
+    """Initial heads missing or of an unsupported kind."""
+
+    prefix = "init."
 
 
 class InternalError(PhrearError):

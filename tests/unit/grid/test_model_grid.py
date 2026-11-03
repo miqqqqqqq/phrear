@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import shutil
-from datetime import datetime
 from pathlib import Path
 
 import geopandas as gpd
@@ -18,50 +16,13 @@ from phrear.grid.model_grid import build_model_grid, isolated_cells
 from phrear.project import Project, gpkg
 from phrear.project.config import Dem
 
+from ..sites import BOTTOM_2
 from .conftest import X0, Y0, plane, write_raster
-
-TOP = plane(0.0, 0.0, 50.0)
-# bottom of unit 1 rises to the top for x > X0 + 1500: unit 1 pinches out there
-BOTTOM_1 = lambda x, y: np.where(x > X0 + 1500, 50.0, 40.0)  # noqa: E731
-BOTTOM_2 = plane(0.0, 0.0, 0.0)
-DOMAIN = shapely.box(X0 + 500, Y0 + 500, X0 + 2500, Y0 + 2000)
-
-
-@pytest.fixture(scope="module")
-def _template(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    root = tmp_path_factory.mktemp("grid") / "site"
-    project = Project.create(
-        root, name="Sito", start=datetime(2020, 1, 1), end=datetime(2021, 1, 1)
-    )
-    project.config.grid.cell_size_m = 100.0
-    project.save()
-    write_raster(root / "rasters" / "s0.tif", TOP)
-    write_raster(root / "rasters" / "s1.tif", BOTTOM_1)
-    write_raster(root / "rasters" / "s2.tif", BOTTOM_2)
-    frame = gpd.GeoDataFrame(
-        {"name": ["dominio"], "active": [True]}, geometry=[DOMAIN], crs="EPSG:7791"
-    )
-    pyogrio.write_dataframe(
-        frame, project.gpkg_path, layer="domain", append=True, promote_to_multi=True
-    )
-    with gpkg.connect(project.gpkg_path) as conn:
-        conn.executemany(
-            'INSERT INTO "hydro_units" (position, name, sublayers, convertible) '
-            "VALUES (?, ?, ?, 1)",
-            [(1, "copertura", 1), (2, "acquifero", 2)],
-        )
-        conn.executemany(
-            'INSERT INTO "surfaces" (surface_index, raster_path) VALUES (?, ?)',
-            [(0, "rasters/s0.tif"), (1, "rasters/s1.tif"), (2, "rasters/s2.tif")],
-        )
-    return root
 
 
 @pytest.fixture
-def project(_template: Path, tmp_path: Path) -> Project:
-    target = tmp_path / "site"
-    shutil.copytree(_template, target)
-    return Project.open(target)
+def project(site: Project) -> Project:
+    return site
 
 
 def test_layers_units_and_elevations(project: Project) -> None:

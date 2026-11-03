@@ -11,8 +11,6 @@ import pyogrio
 
 from phrear import cli
 
-from .grid.test_model_grid import _template  # noqa: F401  (module-scoped project fixture)
-
 
 def _copy(template: Path, tmp_path: Path) -> Path:
     target = tmp_path / "site"
@@ -20,8 +18,8 @@ def _copy(template: Path, tmp_path: Path) -> Path:
     return target
 
 
-def test_grid_text_summary_and_warning(_template: Path, tmp_path: Path) -> None:  # noqa: F811
-    root = _copy(_template, tmp_path)
+def test_grid_text_summary_and_warning(site_template: Path, tmp_path: Path) -> None:
+    root = _copy(site_template, tmp_path)
     out = io.StringIO()
     code = cli.main(["grid", str(root)], text_stdout=out, stdout=io.BytesIO())
     text = out.getvalue()
@@ -30,8 +28,8 @@ def test_grid_text_summary_and_warning(_template: Path, tmp_path: Path) -> None:
     assert "Griglia DIS: 3 layer × 15 righe × 20 colonne" in text
 
 
-def test_grid_json_and_export(_template: Path, tmp_path: Path) -> None:  # noqa: F811
-    root = _copy(_template, tmp_path)
+def test_grid_json_and_export(site_template: Path, tmp_path: Path) -> None:
+    root = _copy(site_template, tmp_path)
     stdout = io.BytesIO()
     code = cli.main(["--json", "grid", str(root), "--export"], stdout=stdout)
     events = [json.loads(line) for line in stdout.getvalue().splitlines()]

@@ -14,6 +14,7 @@ Ogni decisione presa durante lo sviluppo ha un file numerato in questa cartella 
 | [0008](0008-schema-geopackage-v1.md) | Schema GeoPackage versione 1 | accettata | 34 |
 | [0009](0009-discretizzazione-temporale.md) | Discretizzazione temporale | accettata | 35 |
 | [0010](0010-geometria-e-griglia.md) | Geometria e griglia DIS | accettata | 36 |
+| [0011](0011-parametri-e-carichi-iniziali.md) | Parametri uniformi per unità e carichi iniziali | accettata | 37 |
 
 ## Modello
 
