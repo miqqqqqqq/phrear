@@ -134,6 +134,73 @@ CATALOG: dict[str, Message] = {
         "una copia di backup.",
         hint_en="The file was changed outside Phrear or is damaged. Restore a backup copy.",
     ),
+    "series.invalid_quantity": Message(
+        it="La serie «{series_id}» ha una grandezza non ammessa «{quantity}».",
+        en="Series '{series_id}' has an unsupported quantity '{quantity}'.",
+        hint_it="Scegli quota o carico (length), portata (discharge) o ricarica (velocity).",
+        hint_en="Choose elevation or head (length), discharge, or recharge (velocity).",
+    ),
+    "series.empty": Message(
+        it="La serie «{series_id}» non ha valori.",
+        en="Series '{series_id}' has no values.",
+        hint_it="Aggiungi almeno una coppia data-valore in timeseries_values.",
+        hint_en="Add at least one date-value pair in timeseries_values.",
+    ),
+    "series.orphan_values": Message(
+        it="Ci sono valori della serie «{series_id}», che non è definita in timeseries_meta.",
+        en="There are values for series '{series_id}', which is not defined in timeseries_meta.",
+        hint_it="Aggiungi la serie in timeseries_meta oppure elimina quei valori.",
+        hint_en="Add the series to timeseries_meta or delete those values.",
+    ),
+    "series.bad_datetime": Message(
+        it="Data non valida «{value}» nella serie «{series_id}».",
+        en="Invalid date '{value}' in series '{series_id}'.",
+        hint_it="Usa il formato AAAA-MM-GG oppure AAAA-MM-GGTHH:MM:SS.",
+        hint_en="Use the YYYY-MM-DD or YYYY-MM-DDTHH:MM:SS format.",
+    ),
+    "series.not_defined": Message(
+        it="L'oggetto usa la serie «{series_id}», che non è definita.",
+        en="The object uses series '{series_id}', which is not defined.",
+        hint_it="Correggi il codice della serie oppure aggiungila in timeseries_meta.",
+        hint_en="Fix the series code or add the series to timeseries_meta.",
+    ),
+    "series.not_covered": Message(
+        it="La serie «{series_id}» va dal {start} al {end}, ma serve dal {needed_start} "
+        "al {needed_end}.",
+        en="Series '{series_id}' spans {start} to {end}, but {needed_start} to "
+        "{needed_end} is needed.",
+        hint_it="Aggiungi valori che coprano l'intervallo richiesto. Una serie lineare "
+        "deve arrivare almeno alla fine del modello.",
+        hint_en="Add values covering the required interval. A linear series must reach "
+        "at least the end of the model.",
+    ),
+    "series.after_end": Message(
+        it="La serie «{series_id}» inizia il {start}, dopo la fine del modello, quindi "
+        "l'oggetto non è mai attivo.",
+        en="Series '{series_id}' starts on {start}, after the end of the model, so the "
+        "object is never active.",
+        hint_it="Controlla le date della serie o il periodo del modello.",
+        hint_en="Check the series dates or the model period.",
+    ),
+    "time.period_merged": Message(
+        it="Il periodo dal {start} al {end} dura {duration_d} d, meno del minimo di "
+        "{min_d} d, ed è unito al periodo adiacente. Le attivazioni del {moved_from} "
+        "passano al {moved_to}.",
+        en="The period from {start} to {end} lasts {duration_d} d, less than the minimum "
+        "of {min_d} d, and is merged with the adjacent one. Activations on {moved_from} "
+        "move to {moved_to}.",
+        hint_it="Riduci time.min_period_d in project.toml oppure sposta le date di "
+        "attivazione o i cambi di regime.",
+        hint_en="Lower time.min_period_d in project.toml or move the activation dates "
+        "or the regime changes.",
+    ),
+    "time.too_many_steps": Message(
+        it="Il periodo di {length_d} d richiede più di {limit} passi temporali con le "
+        "impostazioni attuali.",
+        en="The {length_d} d period needs more than {limit} time steps with the current settings.",
+        hint_it="Aumenta time.dt_initial_d o time.dt_max_d in project.toml.",
+        hint_en="Increase time.dt_initial_d or time.dt_max_d in project.toml.",
+    ),
     "internal.unexpected": Message(
         it="Errore interno imprevisto.",
         en="Unexpected internal error.",
@@ -219,6 +286,18 @@ class ProjectError(PhrearError):
     """Project folder, project.toml or GeoPackage missing, invalid or outdated."""
 
     prefix = "project."
+
+
+class SeriesError(PhrearError):
+    """Time series missing, inconsistent or not covering the needed interval."""
+
+    prefix = "series."
+
+
+class TimeError(PhrearError):
+    """Time discretisation that cannot be built from the settings."""
+
+    prefix = "time."
 
 
 class InternalError(PhrearError):

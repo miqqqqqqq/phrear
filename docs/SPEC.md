@@ -167,7 +167,7 @@ QGIS 4 + plugin ──(CLI + eventi JSON)──> core phrear ──> MODFLOW 6 (
                                viewer 3D ────┘ (legge i risultati)
 ```
 
-Comandi CLI minimi: `new`, `check`, `grid`, `build`, `run`, `results`, `export`, `migrate`, `info`, `schema`, `import`, `scenario`, `verify`. Ogni comando accetta l'opzione `--json` per produrre l'output come eventi. Il comando `verify` esegue i test di verifica sull'installazione dell'utente e produce il report di affidabilità (sezione 20). Codici di uscita: 0 successo, 1 errore nell'input o nel progetto, 2 riga di comando non valida, 3 errore interno (ADR 0006).
+Comandi CLI minimi: `new`, `check`, `grid`, `build`, `run`, `results`, `export`, `migrate`, `info`, `schema`, `calendar`, `import`, `scenario`, `verify`. Ogni comando accetta l'opzione `--json` per produrre l'output come eventi. Il comando `verify` esegue i test di verifica sull'installazione dell'utente e produce il report di affidabilità (sezione 20). Codici di uscita: 0 successo, 1 errore nell'input o nel progetto, 2 riga di comando non valida, 3 errore interno (ADR 0006).
 
 ---
 
@@ -262,6 +262,7 @@ nome_progetto/
 - `crs`: codice EPSG del progetto. Default RDN2008/UTM 32N (EPSG:7791) oppure 33N (EPSG:7792), con assi in ordine E-N; i codici 6707 e 6708 hanno ordine N-E.
 - `units`: unità preferite per inserimento e visualizzazione (`discharge`, `conductivity`, `recharge`, `storage`), ciascuna controllata contro la sua grandezza.
 - `model.start_date`, `model.end_date`, `model.steady_initial` (booleano), `model.steady_reference` (inizio e fine del periodo di riferimento per le medie del periodo stazionario; se assente si usano i valori alla `start_date`), `model.period_breaks` (date dei cambi di regime indicate dall'utente).
+- `time`: passi temporali automatici (`dt_initial_d`, `tsmult`, `dt_max_d`) e durata minima dei periodi (`min_period_d`), sezione 13.
 - `dem`: raster del DEM e riferimento verticale.
 - `initial_heads`: modalità (costante, raster, interpolazione delle misure alla `start_date`, risultato di un run precedente) con il relativo valore, raster o `run_id`.
 - `grid`: tipo, dimensione base, rotazione, origine, spessore minimo (`min_thickness_m`, default 0,5 m); regole di raffinamento da M4.
@@ -425,15 +426,15 @@ Regole:
 
 ## 13. Discretizzazione temporale
 
-- **Stress period ai cambi di regime.** L'utente inserisce serie temporali con date. Un nuovo stress period inizia solo a un cambio di regime, cioè alla fine del periodo stazionario, all'inizio o alla fine di una serie, o a una data indicata dall'utente in `model.period_breaks` (per esempio l'avvio della barriera).
-- **Serie dentro i periodi.** Le serie entrano nel modello tramite i file di serie temporali di MF6, TS per le condizioni a lista e TAS per gli array. MF6 applica a ogni timestep il valore medio della serie sull'intervallo.
-- **Periodo iniziale.** Il primo periodo è stazionario, opzione attiva di default. Usa le medie delle serie sul periodo di riferimento `model.steady_reference`; se non è indicato, usa i valori alla `start_date`.
+- **Stress period ai cambi di regime.** L'utente inserisce serie temporali con date. Un nuovo stress period inizia solo a un cambio di regime, cioè all'avvio del modello, alla prima data di una serie in uso (attivazione dell'oggetto che la usa) o a una data indicata dall'utente in `model.period_breaks` (per esempio l'avvio della barriera). Prima della prima data l'oggetto è inattivo (ADR 0009).
+- **Serie dentro i periodi.** Le serie entrano nel modello tramite i file di serie temporali di MF6, TS per le condizioni a lista e TAS per gli array. MF6 applica a ogni timestep il valore medio della serie sull'intervallo, come verificato da un test che confronta i volumi del bilancio con l'integrale esatto delle serie.
+- **Periodo iniziale.** Il primo periodo è stazionario, opzione attiva di default, e dura 1 d, quindi il tempo di simulazione 0 cade un giorno prima di `start_date`. Usa le medie esatte delle serie sul periodo di riferimento `model.steady_reference`; se non è indicato, usa i valori alla `start_date`. Gli oggetti che si attivano dopo l'avvio non partecipano al periodo stazionario.
 - **Interpolazione delle serie.**
-  - Serie a gradino (STEPWISE): ogni valore vale fino al punto successivo.
-  - Serie lineari (LINEAR): interpolazione lineare tra i punti.
-- **Timestep.** Numero e moltiplicatore per periodo hanno default automatici, per esempio passi iniziali brevi dopo ogni cambio di portata [DA CONFERMARE i valori]. La lunghezza massima del timestep è configurabile e fissa la risoluzione con cui le serie entrano nel modello.
-- **Durata minima.** È configurabile. I periodi più brevi vengono uniti al successivo, con un avviso.
-- **Calendario visibile.** Prima del run l'utente vede la tabella periodo → date → numero di timestep.
+  - Serie a gradino (STEPWISE): ogni valore vale fino al punto successivo; l'ultimo vale fino alla fine del modello.
+  - Serie lineari (LINEAR): interpolazione lineare tra i punti; una serie lineare in uso deve arrivare almeno alla fine del modello.
+- **Timestep.** Per ogni periodo transitorio si sceglie il numero minimo di passi con il moltiplicatore più alto, non oltre `time.tsmult`, tali che il primo passo sia ≤ `time.dt_initial_d` e l'ultimo ≤ `time.dt_max_d`. Default 1 d, 1,2 e 30 d [DA CONFERMARE i valori]. Il passo massimo fissa la risoluzione con cui le serie entrano nel modello.
+- **Durata minima.** È configurabile (`time.min_period_d`, default 1 d). I periodi più brevi vengono uniti al successivo, o al precedente se sono gli ultimi, con un avviso; le attivazioni interessate sono anticipate all'inizio del periodo unito.
+- **Calendario visibile.** Prima del run l'utente vede la tabella periodo → date → numero di timestep, con il motivo di ogni cambio di regime (`phrear calendar`).
 
 ---
 
@@ -823,7 +824,7 @@ Regole:
 
 **Accettazione:** superfici interpolate con incertezza su un caso reale, confrontate con i raster esistenti.
 
-**Stato attuale:** M1a in corso. Completati gli incrementi 1 (scheletro del repository, ambiente, CI), 2 (unità, errori, eventi JSON) e 3 (formato del progetto, comandi `new`, `info`, `schema`, `migrate`).
+**Stato attuale:** M1a in corso. Completati gli incrementi 1 (scheletro del repository, ambiente, CI), 2 (unità, errori, eventi JSON), 3 (formato del progetto, comandi `new`, `info`, `schema`, `migrate`) e 4 (serie temporali, stress period, passi temporali, comando `calendar`).
 
 ---
 
@@ -908,3 +909,4 @@ Regole:
 | 32 | 2026-11-03 | Eventi JSON Lines UTF-8 su stdout binario, messaggi IT/EN, codici di uscita 0–3 (ADR 0006) | Indipendenza dalla codifica della console Windows; il plugin sceglie la lingua | Testo libero; una sola lingua; PYTHONIOENCODING |
 | 33 | 2026-11-03 | project.toml letto con tomllib, validato con pydantic, scritto con tomlkit (ADR 0007) | Errori con il percorso della voce; commenti dell'utente conservati | tomli-w; scrittura manuale |
 | 34 | 2026-11-03 | Schema GeoPackage v1: un layer per tipo di geometria, nomi senza parole riservate, default nello schema, timestamp da trigger, hash di contenuto canonici, migrazioni con backup (ADR 0008) | Compatibilità con la digitalizzazione di QGIS; tracciabilità senza falsi positivi | Layer `Geometry` misti; hash del file; tutte le tabelle subito |
+| 35 | 2026-11-03 | Serie indefinite prima della prima data (attivazione), periodo stazionario di 1 d, accorpamento dei periodi brevi, passi con moltiplicatore massimo compatibile con primo e ultimo passo (ADR 0009) | Volumi conservati esattamente, verificati con MF6; nessuna estrapolazione silenziosa | Unione dei punti di cambio; valore a inizio passo; nstp e tsmult fissi |

@@ -17,3 +17,5 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versio
 - Project format (schema 1): `project.toml` validated with pydantic and written with tomlkit keeping comments (ADR 0007); GeoPackage with the M1a tables, unique indexes, timestamp triggers and the ST_* functions needed by the R-tree triggers (ADR 0008).
 - Content hashes of settings, GeoPackage tables and rasters; migration framework with backup.
 - Commands `new`, `info`, `schema` (data schema and event protocol as JSON) and `migrate`; `result` event.
+- Time discretisation (ADR 0009): time series with exact values and averages, stress periods at regime changes, merge of short periods, automatic time steps, steady-state values, MF6 time series records; `[time]` settings; command `calendar`.
+- Engine test: MF6 well volumes equal the exact integral of stepwise and linear series.

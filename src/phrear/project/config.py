@@ -97,6 +97,26 @@ class ModelTime(_Section):
         return self
 
 
+class TimeStepping(_Section):
+    """Automatic time steps of each stress period (docs/SPEC.md, section 13).
+
+    Each transient period starts with a step no longer than ``dt_initial_d`` and
+    grows by at most ``tsmult`` per step, without exceeding ``dt_max_d``, which
+    also sets the resolution with which time series enter the model.
+    """
+
+    dt_initial_d: float = Field(default=1.0, gt=0)
+    tsmult: float = Field(default=1.2, ge=1.0)
+    dt_max_d: float = Field(default=30.0, gt=0)
+    min_period_d: float = Field(default=1.0, gt=0)
+
+    @model_validator(mode="after")
+    def _ordered(self) -> TimeStepping:
+        if self.dt_max_d < self.dt_initial_d:
+            raise ValueError("dt_max_d must not be smaller than dt_initial_d")
+        return self
+
+
 class Dem(_Section):
     raster_path: str
     vertical_datum: str = ""
@@ -160,6 +180,7 @@ class ProjectConfig(_Section):
     crs: int = Field(gt=0, description="EPSG code of the project CRS")
     units: Units = Field(default_factory=Units)
     model: ModelTime
+    time: TimeStepping = Field(default_factory=TimeStepping)
     dem: Dem | None = None
     initial_heads: InitialHeads | None = None
     grid: Grid = Field(default_factory=Grid)

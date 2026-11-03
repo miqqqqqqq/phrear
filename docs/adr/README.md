@@ -12,6 +12,7 @@ Ogni decisione presa durante lo sviluppo ha un file numerato in questa cartella 
 | [0006](0006-protocollo-eventi.md) | Protocollo degli eventi, errori e codici di uscita | accettata | 32 |
 | [0007](0007-project-toml.md) | project.toml: pydantic e tomlkit | accettata | 33 |
 | [0008](0008-schema-geopackage-v1.md) | Schema GeoPackage versione 1 | accettata | 34 |
+| [0009](0009-discretizzazione-temporale.md) | Discretizzazione temporale | accettata | 35 |
 
 ## Modello
 
