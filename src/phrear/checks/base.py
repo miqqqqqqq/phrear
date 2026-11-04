@@ -12,6 +12,7 @@ from phrear.conceptual.initial_heads import InitialHeads
 from phrear.errors import Localized
 from phrear.events import Problem
 from phrear.grid.model_grid import ModelGrid
+from phrear.params.cells import CellParameters
 from phrear.params.layers import LayerParameters
 from phrear.params.values import ParameterSet
 from phrear.project import Project
@@ -55,6 +56,7 @@ class Inspection:
     grid: ModelGrid | None = None
     params: ParameterSet | None = None
     layers: LayerParameters | None = None
+    cells: CellParameters | None = None
     heads: InitialHeads | None = None
     boundaries: Boundaries | None = None
     checks: dict[str, Literal["ok", "errors", "warnings", "skipped"]] = field(default_factory=dict)

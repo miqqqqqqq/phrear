@@ -98,7 +98,9 @@ All'apertura il plugin configura ogni layer secondo lo schema del core. Tutto vi
 | Serie temporale | le coppie data–valore |
 | Linea o area a carico imposto | le sue stazioni |
 
-Dal form del padre si aggiungono i figli già collegati: un parametro aggiunto dal form di un'unità riceve da solo l'unità e il tipo di oggetto. Eliminare un'unità, una serie o una linea elimina anche i figli, dopo la conferma di QGIS.
+Dal form del padre si aggiungono i figli già collegati: un parametro aggiunto dal form di un'unità riceve da solo l'unità e il tipo di oggetto.
+
+**Zone dei parametri.** Una zona appartiene a un'unità e porta solo i parametri che cambiano: dentro la zona prevalgono sul valore uniforme dell'unità, fuori vale l'unità. In una cella attraversata dal contorno il valore è la media pesata sull'area, geometrica per K e aritmetica per Ss, Sy e n_e. Se l'unità indica l'anisotropia Kv/Kh, una zona con il solo K orizzontale conserva il rapporto. Le zone di una stessa unità non devono sovrapporsi; un'unità senza valore uniforme deve avere zone che coprono tutte le sue celle attive. `pixi run phrear params "<progetto>" --export` scrive i valori di ogni cella, con la loro origine, in `exports\params.gpkg`. Eliminare un'unità, una serie o una linea elimina anche i figli, dopo la conferma di QGIS.
 
 **Date.** Date e ore sono l'ora civile del modello, senza fuso. Il plugin le salva in modo che l'ora resti quella inserita, anche con il calcolatore di campi; nel GeoPackage possono comparire con lo scarto di fuso (`2024-07-15T00:00:00+02:00`), che il core ignora.
 

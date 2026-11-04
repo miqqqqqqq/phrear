@@ -156,11 +156,11 @@ def test_raster_values_are_not_available_yet(valid_site: Project) -> None:
     assert info.value.ref is not None and info.value.ref.field == "raster_path"
 
 
-def test_zone_values_are_not_available_yet(valid_site: Project) -> None:
+def test_row_of_an_unknown_zone(valid_site: Project) -> None:
     _replace(valid_site, 2, "kh", object_type="zone")
     with pytest.raises(ParameterError) as info:
         load_parameters(valid_site)
-    assert info.value.code == "params.source_not_available"
+    assert info.value.code == "params.unknown_zone"
 
 
 def test_unknown_unit(valid_site: Project) -> None:

@@ -63,7 +63,7 @@ Per vedere i singoli passaggi:
 |---|---|
 | `calendar` | stress period, passi temporali e motivo di ogni periodo |
 | `grid --export` | dimensioni della griglia e celle attive; `exports/grid.gpkg` con quote e IDOMAIN per colonna |
-| `params` | parametri per unità, valore originale e valore in m e giorni |
+| `params --export` | parametri per unità e per zona, valore originale e valore in m e giorni; `exports/params.gpkg` con i valori di ogni cella e la loro origine |
 | `bc --export` | celle assegnate a pozzi, carichi imposti e ricarica; `exports/bc.gpkg` |
 
 ## 5. Esecuzione

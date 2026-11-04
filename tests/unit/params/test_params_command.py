@@ -67,3 +67,35 @@ def test_params_json_result_and_warning(valid_site: Project) -> None:
     kh = next(v for v in units[0]["values"] if v["param"] == "kh")
     assert kh["unit"] == "m/s" and kh["internal_unit"] == "m/d"
     assert kh["internal_value"] == pytest.approx(8.64)
+
+
+def test_params_with_a_zone_and_the_export(valid_site: Project) -> None:
+    import pyogrio
+
+    from phrear.grid.model_grid import build_model_grid
+
+    from .test_cells import add_zone, strip
+
+    grid = build_model_grid(valid_site)
+    zone = add_zone(valid_site, 2, strip(grid, 0.0, 550.0), {"kh": (432.0, "m/d")}, name="Lente")
+    out = io.StringIO()
+    code = cli.main(
+        ["params", str(valid_site.root), "--export"], text_stdout=out, stdout=io.BytesIO()
+    )
+    assert code == 0
+    assert any("zona «Lente»" in line and "432 m/d" in line for line in out.getvalue().splitlines())
+    stdout = io.BytesIO()
+    cli.main(["--json", "params", str(valid_site.root), "--export"], stdout=stdout)
+    data = next(json.loads(x) for x in stdout.getvalue().splitlines() if b'"result"' in x)["data"]
+    aquifer = data["units"][1]
+    assert aquifer["zones"][0]["fid"] == zone and aquifer["zones"][0]["values"][0]["param"] == "kh"
+    g = grid.geometry
+    assert data["export_features"] == grid.nlay * g.nrow * g.ncol
+    frame = pyogrio.read_dataframe(data["export"])
+    row = g.nrow // 2 + 1
+    cell = frame[(frame.layer == 3) & (frame.row == row) & (frame.col == 6)].iloc[0]
+    assert cell["kh"] == pytest.approx((432.0 * 50.0) ** 0.5)
+    assert cell["kh_ms"] == pytest.approx(cell["kh"] / 86400.0)
+    assert (cell["origin_kh"], cell["zone_kh"], cell["share_kh"]) == ("zone", zone, 0.5)
+    first = frame[(frame.layer == 1) & (frame.idomain > 0)]
+    assert set(first.origin_kh) == {"uniform"} and set(first.origin_ne) == {"none"}

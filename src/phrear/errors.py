@@ -345,6 +345,42 @@ CATALOG: dict[str, Message] = {
         hint_it="Correggi object_id oppure elimina la riga.",
         hint_en="Fix object_id or delete the row.",
     ),
+    "params.unknown_zone": Message(
+        it="Una riga di param_values si riferisce alla zona con fid {fid}, che non esiste.",
+        en="A param_values row refers to the zone with fid {fid}, which does not exist.",
+        hint_it="Correggi object_id oppure elimina la riga.",
+        hint_en="Fix object_id or delete the row.",
+    ),
+    "params.zone_unknown_unit": Message(
+        it="La zona {zone} si riferisce all'unità con fid {fid}, che non esiste.",
+        en="Zone {zone} refers to the unit with fid {fid}, which does not exist.",
+        hint_it="Scegli l'unità idrostratigrafica della zona.",
+        hint_en="Choose the hydrostratigraphic unit of the zone.",
+    ),
+    "params.zone_invalid": Message(
+        it="La geometria della zona {zone} non è valida: {reason}.",
+        en="The geometry of zone {zone} is not valid: {reason}.",
+        hint_it="Correggila con Vettore → Strumenti di geometria → Correggi geometrie.",
+        hint_en="Fix it with Vector → Geometry Tools → Fix Geometries.",
+    ),
+    "params.zone_empty": Message(
+        it="La zona {zone} non ha parametri e non cambia il modello.",
+        en="Zone {zone} has no parameters and does not change the model.",
+        hint_it="Aggiungi i parametri dal form della zona, oppure eliminala.",
+        hint_en="Add the parameters from the form of the zone, or delete it.",
+    ),
+    "params.zones_overlap": Message(
+        it="Le zone {first} e {second} dell'unità {unit} si sovrappongono per {area} m².",
+        en="Zones {first} and {second} of unit {unit} overlap by {area} m².",
+        hint_it="Le zone di una stessa unità non devono sovrapporsi: correggi i contorni.",
+        hint_en="Zones of the same unit must not overlap: fix their outlines.",
+    ),
+    "params.cells_without_value": Message(
+        it="Il parametro {param} dell'unità {unit} non ha valore in {n_cells} celle attive.",
+        en="Parameter {param} of unit {unit} has no value in {n_cells} active cells.",
+        hint_it="Dai all'unità un valore uniforme, oppure estendi le zone fino a coprirle.",
+        hint_en="Give the unit a uniform value, or extend the zones to cover them.",
+    ),
     "params.missing": Message(
         it="Manca il parametro {param} per l'unità {unit}.",
         en="Parameter {param} is missing for unit {unit}.",

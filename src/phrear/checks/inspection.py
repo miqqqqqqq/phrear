@@ -16,7 +16,8 @@ from phrear.conceptual.initial_heads import initial_heads
 from phrear.errors import ErrorCollector, PhrearError
 from phrear.events import Problem
 from phrear.grid.model_grid import build_model_grid
-from phrear.params.layers import layer_parameters
+from phrear.params.cells import assign_cells
+from phrear.params.layers import layer_arrays
 from phrear.params.values import load_parameters
 from phrear.project import Project
 from phrear.timeline import project_timeline
@@ -56,8 +57,15 @@ def inspect_project(project: Project) -> Inspection:
 
     def params(errors: ErrorCollector) -> list[Problem]:
         loaded = load_parameters(project, errors)
-        if not errors.errors:
-            ins.params = loaded
+        if errors.errors:
+            return list(loaded.warnings)
+        if ins.grid is not None:  # values cell by cell need the grid
+            cells = assign_cells(ins.grid, loaded, errors)
+            if errors.errors:
+                return list(loaded.warnings)
+            ins.cells = cells
+            ins.layers = layer_arrays(ins.grid, cells)
+        ins.params = loaded
         return list(loaded.warnings)
 
     def heads(_: ErrorCollector) -> list[Problem]:
@@ -66,8 +74,7 @@ def inspect_project(project: Project) -> Inspection:
         return list(ins.heads.warnings)
 
     def boundaries(errors: ErrorCollector) -> list[Problem]:
-        assert ins.grid is not None and ins.params is not None and ins.timeline is not None
-        ins.layers = layer_parameters(ins.grid, ins.params)
+        assert ins.grid is not None and ins.layers is not None and ins.timeline is not None
         built = build_boundaries(project, ins.grid, ins.layers, ins.timeline, errors)
         if not errors.errors:
             ins.boundaries = built
