@@ -2,6 +2,8 @@
 
 Il plugin non contiene logica di calcolo: esegue il core di Phrear nel suo ambiente pixi e ne mostra i risultati in QGIS. Serve quindi il repository di Phrear installato come descritto nella [guida rapida da riga di comando](guida-rapida-cli.md) (`pixi install`). QGIS supportato: 4.x.
 
+Per cominciare: installazione e impostazioni (sezioni 1–3), poi il percorso guidato con il progetto di esempio (sezione 8). La sezione 9 spiega come costruire un modello nuovo.
+
 ## 1. Installazione
 
 **Per lo sviluppo**, con il plugin caricato direttamente dal repository:
@@ -143,7 +145,54 @@ Le celle inattive, asciutte o a passaggio verticale restano vuote.
 - **Apri la cartella** apre la cartella del run, con file di MODFLOW 6, listing, bilancio e manifest;
 - **Aggiorna** rilegge l'elenco.
 
-## 8. Problemi frequenti
+## 8. Percorso guidato con il progetto di esempio
+
+Una prova completa in una ventina di minuti, dopo installazione e impostazioni (sezioni 1–3).
+
+1. **Crea l'esempio.** Plugin → Phrear → Crea il progetto di esempio…, in una cartella nuova. Compaiono il gruppo «Phrear – Esempio - piana alluvionale» e, a destra, il pannello Phrear. Il sito è una piana alluvionale sintetica di 3 × 2 km, simulata per il 2024 dopo uno stato stazionario.
+2. **Guarda i dati.** Con lo strumento Informazioni o con la tabella degli attributi:
+   - **Pozzi**: P1 acquedotto, 15 l/s costanti, filtri tra 15 e 35 m di profondità sotto `z_ref`; P2 irriguo, con la serie `q_irriguo` (10 l/s da aprile, 20 l/s da giugno, fermo da settembre);
+   - **Carichi imposti lungo linee**: il limite a monte a 47 m, con una stazione, e il fiume, con due stazioni e livelli mensili; il form della linea mostra le stazioni;
+   - **Unità idrostratigrafiche** (in Tabelle): limi di copertura e ghiaie e sabbie, con i parametri nel form dell'unità;
+   - **Zone di ricarica**: 250 mm/anno sui campi, 80 mm/anno sull'area urbana.
+3. **Controlla.** Nessun errore e un avviso voluto: i limi si chiudono verso ovest, e dove sono più sottili di 0,5 m le celle diventano a passaggio verticale.
+4. **Griglia e celle.** **Mostra la griglia** carica le celle di 50 m con tetto, fondi e IDOMAIN di ogni layer; **Mostra le celle assegnate** carica le celle di pozzi, carichi imposti e ricarica, colorate come il layer di origine.
+5. **Esegui.** Scrivi `base` come nome del run e premi Esegui. In pochi secondi lo stato riporta durata ed errore di bilancio, e «Carichi – base» compare in Risultati.
+6. **Scorri il tempo.** Apri il controllo temporale e scorri il 2024: attorno a P2 il carico scende da aprile, di più da giugno, e risale da settembre. I livelli del fiume cambiano ogni mese.
+7. **Cambia un dato.** Porta P1 a 30 l/s e salva. Nella scheda Run accanto a `base` compare «progetto modificato». Esegui un run `p1_30`: i due layer dei carichi restano entrambi in Risultati e si confrontano accendendoli e spegnendoli.
+8. **Prova un errore.** Nel form di P1 metti Fine filtro = 10, più in alto dell'inizio, e salva. Controlla dà un errore in Condizioni al contorno. **Mostra la feature** centra P1 e **Apri il form** lo apre per correggerlo: rimetti 35, salva e ricontrolla.
+9. **Apri la cartella del run.** Scheda Run → Apri la cartella: file di MODFLOW 6, listing (`mfsim.lst`, `gwf.lst`), bilancio per passo (`gwf.bud.csv`), carichi (`heads.nc`) e `manifest.json` con versioni, hash del progetto ed esito.
+10. **Salva il progetto QGIS.** Riaprendolo ritrovi layer, form, risultati e il collegamento al progetto Phrear.
+
+## 9. Un modello nuovo
+
+**Nuovo progetto Phrear…** crea un progetto vuoto. I passi seguono l'ordine in cui il controllo li chiede: dopo ognuno, **Controlla** indica il dato che manca e come aggiungerlo.
+
+1. **Impostazioni in `project.toml`.** Per ora si modificano con un editor di testo, per esempio VS Code; il core rilegge il file a ogni comando.
+
+   ```toml
+   [grid]
+   cell_size_m = 50.0          # obbligatoria
+
+   [initial_heads]
+   mode = "constant"           # oppure mode = "raster" con raster_path = "rasters/carichi.tif"
+   value_m = 45.0
+
+   [dem]                       # facoltativo, per i controlli sulle quote
+   raster_path = "rasters/dem.tif"
+   ```
+
+   Nella stessa sezione `[grid]` ci sono rotazione, spessore minimo e regola di attivazione delle celle; in `[time]` i passi temporali. L'elenco dei campi è nella sezione 8.1 della [SPEC](SPEC.md); il `project.toml` del progetto di esempio è un modello completo.
+2. **Dominio.** Metti in modifica il layer Dominio del modello, disegna il contorno e salva.
+3. **Unità idrostratigrafiche** (Tabelle). Una riga per unità: posizione (1 = la più alta), nome, convertibile, numero di sotto-layer.
+4. **Superfici.** Copia nella cartella `rasters` del progetto i GeoTIFF delle superfici di contatto, nello stesso sistema di riferimento del progetto e in modo che coprano il dominio. Nella tabella Superfici aggiungi una riga per ogni superficie: indice 0 per il tetto del modello, indice i per la base dell'unità i, percorso relativo come `rasters/base_ghiaie.tif`. Per n unità servono le superfici da 0 a n.
+5. **Parametri.** Nel form di ogni unità, sezione Parametri dell'unità: K orizzontale, K verticale oppure anisotropia Kv/Kh, Ss e, per le unità convertibili, Sy. Ogni valore ha la sua unità di misura (`m/s`, `m/d`, `1/m`, `%`, …) e un'origine.
+6. **Carichi imposti.** Il periodo stazionario iniziale ne richiede almeno uno. Disegna una linea (o un'area) a carico imposto, poi aggiungi le stazioni dal suo form: ogni stazione ha un valore costante o una serie di livelli. Con più stazioni il carico si interpola lungo la linea.
+7. **Pozzi e ricarica.** Pozzi come punti, con filtri in profondità o in quota, portata costante o serie. Zone di ricarica come poligoni che non si sovrappongono, con tasso costante o serie.
+8. **Serie temporali.** Nella tabella Serie temporali una riga per serie: codice, grandezza (portata, livello, velocità), unità, interpolazione a gradini o lineare. Le coppie data–valore si aggiungono dal form della serie. Il codice si sceglie poi nel campo serie della feature, dove compaiono solo le serie della grandezza giusta.
+9. **Controlla ed esegui.** Quando Controlla non dà più errori, Esegui. Gli avvisi non bloccano il run, ma vanno letti.
+
+## 10. Problemi frequenti
 
 | Messaggio | Causa e rimedio |
 |---|---|

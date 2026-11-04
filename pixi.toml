@@ -58,3 +58,4 @@ check = { depends-on = ["lint", "typecheck", "test"] }
 plugin-zip = "python scripts/plugin_package.py zip"
 plugin-link = "python scripts/plugin_package.py link"
 plugin-i18n = "python scripts/plugin_i18n.py"
+compare-runs = "python scripts/compare_runs.py"

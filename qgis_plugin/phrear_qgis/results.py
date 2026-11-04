@@ -23,7 +23,7 @@ from qgis.core import (
 )
 
 from .client.project import layer_uri
-from .client.results import cell_categories, heads_group
+from .client.results import cell_categories, heads_group, mesh_uri
 from .i18n import tr
 
 RUN_PROPERTY = "phrear/run"
@@ -73,7 +73,7 @@ def load_heads(group: Any, root: Path, run_id: str, path: str, preferred: str = 
     existing = heads_layer(root, run_id)
     if existing is not None:
         return existing
-    layer = QgsMeshLayer(path, tr("Heads – {run_id}").format(run_id=run_id), "mdal")
+    layer = QgsMeshLayer(mesh_uri(path), tr("Heads – {run_id}").format(run_id=run_id), "mdal")
     if not layer.isValid():
         return None
     layer.setCustomProperty(RUN_PROPERTY, run_id)

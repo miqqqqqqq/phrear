@@ -42,6 +42,15 @@ class RunRow:
         return self.status == "completed" and self.heads is not None
 
 
+def mesh_uri(path: str | Path) -> str:
+    """Source of a heads file for the MDAL provider, with its driver named.
+
+    Without the driver MDAL tries its other formats first, and the HDF5 ones fill
+    the output of QGIS with diagnostics while probing the file.
+    """
+    return 'Ugrid:"' + str(path).replace("\\", "/") + '"'
+
+
 def default_heads(data: dict[str, Any] | None) -> str:
     """Name of the dataset to show first in the heads of a run, from ``runs`` or ``run``."""
     data = data or {}

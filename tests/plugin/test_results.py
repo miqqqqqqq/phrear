@@ -19,6 +19,7 @@ from phrear_qgis.client.results import (
     default_heads,
     export_args,
     heads_group,
+    mesh_uri,
     run_rows,
     runs_args,
 )
@@ -84,3 +85,8 @@ def test_cell_categories_take_the_colour_of_their_layer(schema: dict[str, Any]) 
     assert categories[0].label == wells["label"]["it"]
     assert categories[0].outline == rgba(wells["style"]["color"])
     assert categories[2].label == "unknown" and categories[2].fill.startswith("128,128,128")
+
+
+def test_heads_are_opened_with_the_ugrid_driver() -> None:
+    assert mesh_uri("C:\\p\\runs\\base\\heads.nc") == 'Ugrid:"C:/p/runs/base/heads.nc"'
+    assert mesh_uri(Path("/p/runs/base/heads.nc")) == 'Ugrid:"/p/runs/base/heads.nc"'
