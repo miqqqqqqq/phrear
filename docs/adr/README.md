@@ -22,6 +22,7 @@ Ogni decisione presa durante lo sviluppo ha un file numerato in questa cartella 
 | [0016](0016-verifica-analitica.md) | Verifica con soluzioni analitiche e comando `verify` | accettata | 42 |
 | [0017](0017-esempio-e-chiusura-m1a.md) | Progetto di esempio, registro degli exporter, chiusura di M1a | accettata | 43 |
 | [0018](0018-plugin-qgis-architettura.md) | Plugin QGIS: collegamento al core, processi, traduzioni, pacchetto | accettata | 44 |
+| [0019](0019-plugin-progetti.md) | Plugin QGIS: progetti, layer e modifiche in sospeso | accettata | 45 |
 
 ## Modello
 

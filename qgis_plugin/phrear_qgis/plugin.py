@@ -2,19 +2,21 @@
 
 from __future__ import annotations
 
+import contextlib
 from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
-from qgis.core import Qgis, QgsMessageLog
+from qgis.core import Qgis, QgsApplication, QgsMessageLog
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtGui import QAction, QIcon
-from qgis.PyQt.QtWidgets import QMessageBox
+from qgis.PyQt.QtWidgets import QMessageBox, QProgressBar, QPushButton
 
 from .client.command import CoreLocation, location_problems
 from .client.events import Outcome
 from .i18n import install_translator, interface_language, tr
 from .process import CoreProcess
+from .project import ProjectManager
 from .settings import SettingsDialog, current_location, problem_text
 
 LOG_TAG = "Phrear"
@@ -22,6 +24,18 @@ LOG_TAG = "Phrear"
 
 def log(message: str, level: Any = None) -> None:
     QgsMessageLog.logMessage(message, LOG_TAG, level or Qgis.MessageLevel.Info)
+
+
+def action_text(command: str) -> str:
+    """What a command is doing, for the indicator shown while it runs."""
+    texts = {
+        "env": tr("Checking the environment"),
+        "info": tr("Reading the project"),
+        "schema": tr("Reading the data schema"),
+        "new": tr("Creating the project"),
+        "example": tr("Creating the example project"),
+    }
+    return texts.get(command, f"phrear {command}")
 
 
 def environment_text(data: dict[str, Any]) -> str:
@@ -46,6 +60,7 @@ class PhrearPlugin:
         self.toolbar: Any = None
         self.translator: Any = None
         self.processes: set[CoreProcess] = set()
+        self.projects = ProjectManager(self)
 
     # --- QGIS plugin interface ------------------------------------------------------
 
@@ -54,6 +69,14 @@ class PhrearPlugin:
         self.menu = tr("&Phrear")
         self.toolbar = self.iface.addToolBar(tr("Phrear"))
         self.toolbar.setObjectName("PhrearToolbar")
+        theme = QgsApplication.getThemeIcon
+        self._action(tr("New Phrear project…"), self.projects.new_project_dialog,
+                     theme("/mActionFileNew.svg"))  # fmt: skip
+        self._action(tr("Open a Phrear project…"), self.projects.open_project_dialog,
+                     theme("/mActionFileOpen.svg"))  # fmt: skip
+        self._action(tr("Create the example project…"), self.projects.example_dialog)
+        self._action(tr("Project summary"), self.projects.summary)
+        self._separator()
         icon = QIcon(str(self.plugin_dir / "icons" / "phrear.svg"))
         self._action(tr("Check the Phrear environment"), self.check_environment, icon)
         self._action(tr("Phrear settings…"), self.show_settings)
@@ -73,6 +96,12 @@ class PhrearPlugin:
         if self.translator is not None:
             QCoreApplication.removeTranslator(self.translator)
             self.translator = None
+
+    def _separator(self) -> None:
+        separator = QAction(self.iface.mainWindow())
+        separator.setSeparator(True)
+        self.iface.addPluginToMenu(self.menu, separator)
+        self.actions.append(separator)
 
     def _action(self, text: str, callback: Callable[[], None], icon: Any = None) -> Any:
         action = QAction(text, self.iface.mainWindow())
@@ -112,9 +141,11 @@ class PhrearPlugin:
         if location is None:
             return None
         process = CoreProcess(location, args, interface_language(), self.iface.mainWindow())
+        indicator = self._indicator(process)
 
         def finished(outcome: Outcome) -> None:
             self.processes.discard(process)
+            self._close_indicator(indicator)
             self._log_outcome(outcome)
             on_finished(outcome)
             process.deleteLater()
@@ -124,6 +155,49 @@ class PhrearPlugin:
         log(tr("Running phrear {args}").format(args=" ".join(args)))
         process.start()
         return process
+
+    def _indicator(self, process: CoreProcess) -> Any:
+        """Message with a busy bar and a cancel button while the command runs."""
+        bar = self.iface.messageBar()
+        item = bar.createMessage(
+            tr("Phrear"), tr("{action} in progress…").format(action=action_text(process.command))
+        )
+        progress = QProgressBar()
+        progress.setRange(0, 0)
+        progress.setMaximumWidth(240)
+        progress.setTextVisible(False)
+        cancel = QPushButton(tr("Cancel"))
+        cancel.clicked.connect(process.cancel)
+        item.layout().addWidget(progress)
+        item.layout().addWidget(cancel)
+
+        def on_event(event: dict[str, Any]) -> None:
+            fraction = event.get("fraction") if event.get("event") == "progress" else None
+            if isinstance(fraction, (int, float)):
+                progress.setRange(0, 100)
+                progress.setValue(round(100 * fraction))
+
+        process.event_received.connect(on_event)
+        return bar.pushWidget(item, Qgis.MessageLevel.Info)
+
+    def _close_indicator(self, item: Any) -> None:
+        with contextlib.suppress(RuntimeError):  # already closed by the user
+            self.iface.messageBar().popWidget(item)
+
+    def message(self, text: str, level: Any = None, duration: int = 6) -> None:
+        self.iface.messageBar().pushMessage(
+            tr("Phrear"), text, level=level or Qgis.MessageLevel.Info, duration=duration
+        )
+
+    def report_failure(self, outcome: Outcome, title: str) -> bool:
+        """Tell the user why a command did not succeed; True if it did not."""
+        if outcome.ok:
+            return False
+        if outcome.cancelled:
+            self.message(tr("The command was cancelled."), Qgis.MessageLevel.Info)
+        else:
+            QMessageBox.warning(self.iface.mainWindow(), title, self.failure_text(outcome))
+        return True
 
     def _log_outcome(self, outcome: Outcome) -> None:
         lang = interface_language()

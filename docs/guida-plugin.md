@@ -44,7 +44,27 @@ Il pulsante della barra Phrear, o Plugin → Phrear → **Verifica l'ambiente di
 
 Il plugin usa la lingua di QGIS: in italiano sono italiani sia i suoi testi sia i messaggi del core.
 
-## 4. Problemi frequenti
+## 4. Progetti
+
+Menu Plugin → Phrear:
+
+- **Nuovo progetto Phrear…**: nome, cartella di destinazione, cartella del progetto (ricavata dal nome, modificabile), sistema di riferimento (default EPSG:7791, RDN2008 / UTM 32N), inizio e fine del modello. Il progetto viene creato con `phrear new` e subito aperto.
+- **Apri un progetto Phrear…**: scegli la cartella che contiene `project.toml` e `model.gpkg`.
+- **Crea il progetto di esempio…**: crea la piana alluvionale di esempio (`phrear example`) in una cartella nuova o vuota e la apre.
+- **Riepilogo del progetto**: nome, cartella, sistema di riferimento, periodo del modello, numero di righe di ogni tabella e hash del contenuto del progetto aperto.
+
+All'apertura, layer e tabelle di `model.gpkg` finiscono in un gruppo **Phrear – <nome>** in cima al pannello dei layer:
+
+- **Modello concettuale**: pozzi e stazioni, poi linee a carico imposto, poi dominio, aree a carico imposto e zone di ricarica, così le feature piccole stanno sopra quelle grandi;
+- **Tabelle** (chiuso): unità, superfici, parametri, serie temporali, scenari, registro delle modifiche.
+
+I nomi sono quelli dello schema del core, in italiano o in inglese secondo la lingua di QGIS. Se il progetto QGIS è vuoto, il suo sistema di riferimento diventa quello del progetto Phrear; la mappa si centra sul dominio. Un progetto già aperto non viene caricato due volte. Il progetto Phrear aperto resta associato al progetto QGIS quando lo salvi.
+
+I layer si modificano con gli strumenti standard di QGIS. Prima di ogni comando del core, se un layer del progetto ha modifiche non salvate, il plugin chiede se salvarle, scartarle o annullare il comando, perché il core legge il GeoPackage e non vedrebbe le modifiche in sospeso.
+
+Mentre un comando è in corso, la barra dei messaggi mostra «… in corso» con una barra di avanzamento e il pulsante **Annulla**.
+
+## 5. Problemi frequenti
 
 | Messaggio | Causa e rimedio |
 |---|---|
@@ -53,4 +73,4 @@ Il plugin usa la lingua di QGIS: in italiano sono italiani sia i suoi testi sia 
 | Impossibile avviare il core | il percorso di pixi non è valido o pixi non si avvia; prova `pixi run phrear env` da PowerShell nella cartella del repository |
 | Il core usa un'altra versione del protocollo degli eventi | plugin e core vengono da versioni diverse del repository; aggiorna entrambi con `git pull` |
 
-Le funzioni di progetto, controllo, esecuzione e risultati arrivano con i prossimi incrementi di M1b.
+Form, controllo, esecuzione e risultati arrivano con i prossimi incrementi di M1b.
