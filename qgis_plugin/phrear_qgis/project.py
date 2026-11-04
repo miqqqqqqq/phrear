@@ -23,6 +23,7 @@ from .client.project import (
     GPKG_FILE,
     is_project,
     layer_plan,
+    needs_migration,
     new_project_args,
     table_rows,
     upgraded_uri,
@@ -181,12 +182,76 @@ class ProjectManager:
             return
 
         def got_info(outcome: Outcome) -> None:
+            if self.offer_migration(root, outcome, on_done):
+                return
             if self.plugin.report_failure(outcome, tr("Open a Phrear project")):
                 return
             info = outcome.result or {}
             self.with_schema(lambda schema: self._loaded(self.load(root, info, schema), on_done))
 
         self.plugin.run_core(["info", str(root)], got_info)
+
+    # --- migration ----------------------------------------------------------------------
+
+    def offer_migration(
+        self, root: Path, outcome: Outcome, on_done: Callable[[Any], None] | None = None
+    ) -> bool:
+        """If ``outcome`` says the project needs migrating, offer to do it; True if so.
+
+        ``phrear migrate`` first copies project.toml and model.gpkg into the backups
+        folder of the project. Layers already loaded are removed before and loaded
+        again after, because their table structure changes.
+        """
+        if not needs_migration(outcome.failure):
+            return False
+        group = self.find_group(root)
+        lines = [
+            outcome.failure_text(interface_language()),
+            "",
+            tr(
+                "Update the project now? Phrear first copies project.toml and model.gpkg "
+                "into the backups folder of the project."
+            ),
+        ]
+        if group is not None:
+            lines.append(tr("The layers of the project are closed and loaded again."))
+        answer = QMessageBox.question(
+            self.window,
+            tr("Update the project"),
+            "\n".join(lines),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.Yes,
+        )
+        if answer != QMessageBox.StandardButton.Yes:
+            return True
+        if group is not None:
+            if not self.saved(root):
+                return True
+            self.close(group)
+
+        def migrated(result: Outcome) -> None:
+            if self.plugin.report_failure(result, tr("Update the project")):
+                return
+            data = result.result or {}
+            self.plugin.message(
+                tr("Project updated to data schema {version}; backup copy in {folder}.").format(
+                    version=data.get("to_version", "?"), folder=data.get("backup", "")
+                ),
+                Qgis.MessageLevel.Success,
+                10,
+            )
+            self.open(root, on_done)
+
+        self.plugin.run_core(["migrate", str(root)], migrated)
+        return True
+
+    def close(self, group: Any) -> None:
+        """Remove a project group and all its layers from the QGIS project."""
+        project = QgsProject.instance()
+        project.removeMapLayers([node.layerId() for node in group.findLayers()])
+        parent = group.parent()
+        if parent is not None:
+            parent.removeChildNode(group)
 
     def saved(self, root: Path) -> bool:
         """Ask to save or discard unsaved edits on the project; False to stop."""
@@ -270,6 +335,8 @@ class ProjectManager:
             return
 
         def got_info(outcome: Outcome) -> None:
+            if self.offer_migration(root, outcome):
+                return
             if self.plugin.report_failure(outcome, tr("Project summary")):
                 return
             info = outcome.result or {}

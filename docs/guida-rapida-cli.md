@@ -42,7 +42,7 @@ esempio/
 └─ exports/       export per il controllo in QGIS, rigenerabili
 ```
 
-`model.gpkg` si apre in QGIS e si modifica come qualsiasi GeoPackage. Le quote sono in m s.l.m. Ogni valore fisico ha la sua unità di misura accanto, per esempio `rate` e `rate_unit` nei pozzi, oppure `value` e `unit` in `param_values`. L'elenco completo di layer, campi, unità e valori ammessi si ottiene con:
+`model.gpkg` si apre in QGIS e si modifica come qualsiasi GeoPackage. Un progetto creato da una versione precedente di Phrear si aggiorna con `pixi run phrear migrate "C:\...\esempio"`, che prima ne fa una copia di backup in `backups/`. Le quote sono in m s.l.m. Ogni valore fisico ha la sua unità di misura accanto, per esempio `rate` e `rate_unit` nei pozzi, oppure `value` e `unit` in `param_values`. L'elenco completo di layer, campi, unità e valori ammessi si ottiene con:
 
 ```powershell
 pixi run phrear schema

@@ -9,6 +9,7 @@ import pytest
 
 from phrear.project.schema import (
     PARAM_QUANTITIES,
+    SCHEMA_VERSION,
     SERIES_QUANTITIES,
     TABLES,
     FieldType,
@@ -72,7 +73,7 @@ def test_schema_document_is_json_serialisable() -> None:
     document = schema_document()
     text = json.dumps(document, ensure_ascii=False)
     assert '"wells"' in text
-    assert document["schema_version"] == 1
+    assert document["schema_version"] == SCHEMA_VERSION == 2
 
 
 def test_relations_and_lookups_point_to_existing_fields() -> None:
@@ -115,7 +116,7 @@ def test_schema_document_has_relations_lookups_and_styles() -> None:
 
     doc = schema_document()
     assert [r["name"] for r in doc["relations"]] == [
-        "unit_parameters", "series_values", "feature_stations"
+        "unit_parameters", "zone_parameters", "series_values", "feature_stations"
     ]  # fmt: skip
     wells = next(t for t in doc["tables"] if t["name"] == "wells")
     series = next(f for f in wells["fields"] if f["name"] == "series_id")

@@ -301,6 +301,11 @@ class PhrearPanel(QgsDockWidget):  # type: ignore[misc]
     def _finished(self, outcome: Outcome) -> None:
         self.process = None
         lang = interface_language()
+        root = self.plugin.projects.current()
+        if root is not None and self.plugin.projects.offer_migration(root, outcome):
+            self.status.setText(outcome.failure_text(lang))
+            self.refresh()
+            return
         for row in problem_rows([], [], outcome.failure, lang, self.schema):
             self._add_row(row)
         if outcome.command == "check" and outcome.result is not None:

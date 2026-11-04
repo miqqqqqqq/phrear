@@ -164,7 +164,10 @@ def test_display_expressions(schema: dict[str, Any]) -> None:
 
 def test_relations(schema: dict[str, Any]) -> None:
     plans = {p.name: p for p in relation_plans(schema, "en", "/data/progetto")}
-    assert set(plans) == {"Unit parameters", "Series values", "Stations"}
+    assert set(plans) == {"Unit parameters", "Zone parameters", "Series values", "Stations"}
+    zones = plans["Zone parameters"]
+    assert zones.polymorphic and zones.parents == ("param_zones",)
+    assert (zones.layer_field, zones.layer_expression) == ("object_type", "'zone'")
     units = plans["Unit parameters"]
     assert units.polymorphic and units.parents == ("hydro_units",)
     assert (units.layer_field, units.layer_expression) == ("object_type", "'unit'")

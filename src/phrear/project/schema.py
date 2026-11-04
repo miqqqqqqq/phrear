@@ -2,7 +2,8 @@
 
 Creation of the GeoPackage, validation, JSON export for the QGIS plugin and
 migrations all derive from :data:`TABLES`. Version 1 contains the tables needed
-by milestone M1a; later milestones add tables through numbered migrations.
+by milestone M1a; version 2 adds parameter zones and field tests (M2). Later
+versions come with numbered migrations.
 
 Conventions
 -----------
@@ -25,7 +26,7 @@ from typing import Any, Final
 from phrear.errors import Localized
 from phrear.units import PhysicalQuantity
 
-SCHEMA_VERSION: Final = 1
+SCHEMA_VERSION: Final = 2
 
 
 class FieldType(StrEnum):
@@ -135,6 +136,8 @@ class TableDef:
     unique: tuple[tuple[str, ...], ...] = ()
     milestone: str = "M1a"
     style: LayerStyle | None = None
+    since: int = 1
+    """Schema version that introduced the table."""
 
     @property
     def is_layer(self) -> bool:
@@ -185,6 +188,9 @@ COMMON_FEATURE_FIELDS: tuple[FieldDef, ...] = (
 )
 
 NOTES = FieldDef("notes", FieldType.TEXT, L("Note", "Notes"))
+
+#: Hydrostratigraphic unit of a zone or a field test, chosen by name.
+UNIT_LOOKUP = Lookup("hydro_units", "fid", value="name")
 
 _UNIT_RANGE = (
     FieldDef(
@@ -272,18 +278,6 @@ TABLES: tuple[TableDef, ...] = (
                 ),
             ),
             FieldDef(
-                "param_mode",
-                FieldType.TEXT,
-                L("Assegnazione dei parametri", "Parameter assignment"),
-                default="uniform",
-                choices=(
-                    _c("uniform", "Uniforme", "Uniform"),
-                    _c("zones", "Zone", "Zones"),
-                    _c("raster", "Raster", "Raster"),
-                    _c("interpolated", "Interpolata dalle prove", "Interpolated from tests"),
-                ),
-            ),
-            FieldDef(
                 "convertible",
                 FieldType.BOOLEAN,
                 L("Convertibile", "Convertible"),
@@ -305,6 +299,33 @@ TABLES: tuple[TableDef, ...] = (
                 ),
                 default=1,
                 minimum=1,
+            ),
+            FieldDef(
+                "k_from_tests",
+                FieldType.BOOLEAN,
+                L("K dalle prove in sito", "K from field tests"),
+                L(
+                    "Se vero, K orizzontale si interpola in log10 dalle prove dell'unità "
+                    "(inverso della distanza al quadrato). Raster e campo interpolato prevalgono "
+                    "su zone e valore uniforme.",
+                    "If true, horizontal K is interpolated in log10 from the tests of the unit "
+                    "(inverse squared distance). Rasters and the interpolated field take "
+                    "precedence over zones and the uniform value.",
+                ),
+                default=False,
+            ),
+            FieldDef(
+                "interp_max_distance",
+                FieldType.REAL,
+                L("Distanza massima dell'interpolazione", "Interpolation distance limit"),
+                L(
+                    "Oltre questa distanza dalla prova più vicina valgono zone e valore "
+                    "uniforme; vuota = tutta l'unità.",
+                    "Beyond this distance from the nearest test, zones and the uniform value "
+                    "apply; empty = the whole unit.",
+                ),
+                unit="m",
+                minimum=0,
             ),
             NOTES,
         ),
@@ -635,6 +656,139 @@ TABLES: tuple[TableDef, ...] = (
         style=LayerStyle("marker", "#eb6834", outline="#fcfcfb", size_mm=2.8, shape="triangle"),
     ),
     TableDef(
+        "field_tests",
+        GeometryType.POINT,
+        L("Prove in sito", "Field tests"),
+        L(
+            "Prove idrauliche e granulometrie, con il risultato (T, K o S), il tratto provato "
+            "e lo spessore usato nell'interpretazione.",
+            "Hydraulic tests and grain size analyses, with the result (T, K or S), the tested "
+            "interval and the thickness used in the interpretation.",
+        ),
+        (
+            *COMMON_FEATURE_FIELDS,
+            FieldDef(
+                "type",
+                FieldType.TEXT,
+                L("Tipo di prova", "Test type"),
+                required=True,
+                choices=(
+                    _c("pumping_test", "Prova di pompaggio", "Pumping test"),
+                    _c("slug_test", "Slug test", "Slug test"),
+                    _c("lefranc", "Prova Lefranc", "Lefranc test"),
+                    _c("lugeon", "Prova Lugeon", "Lugeon test"),
+                    _c("grain_size", "Granulometria", "Grain size analysis"),
+                ),
+            ),
+            FieldDef(
+                "result_param",
+                FieldType.TEXT,
+                L("Grandezza misurata", "Measured quantity"),
+                required=True,
+                choices=(
+                    _c("T", "Trasmissività T", "Transmissivity T"),
+                    _c("K", "Conducibilità idraulica K", "Hydraulic conductivity K"),
+                    _c("S", "Coefficiente di immagazzinamento S", "Storage coefficient S"),
+                ),
+            ),
+            FieldDef("value", FieldType.REAL, L("Valore", "Value"), required=True, minimum=0),
+            FieldDef(
+                "unit",
+                FieldType.TEXT,
+                L("Unità di misura", "Unit"),
+                L(
+                    "Per esempio m²/s per T, m/s per K; vuota per S.",
+                    "For example m²/s for T, m/s for K; empty for S.",
+                ),
+            ),
+            FieldDef(
+                "depth_mode",
+                FieldType.TEXT,
+                L("Riferimento delle quote", "Depth reference"),
+                L(
+                    "Vale per filtri e livello statico. In profondità i valori crescono verso "
+                    "il basso a partire da z_ref.",
+                    "Applies to screens and static level. Depths increase downwards from z_ref.",
+                ),
+                default="depth",
+                choices=(
+                    _c("depth", "Profondità da z_ref", "Depth below z_ref"),
+                    _c("elevation", "Quota s.l.m.", "Elevation a.s.l."),
+                ),
+            ),
+            FieldDef(
+                "z_ref",
+                FieldType.REAL,
+                L("Quota di riferimento", "Reference elevation"),
+                L(
+                    "Piano campagna o testa pozzo, m s.l.m.; obbligatoria con valori "
+                    "in profondità.",
+                    "Ground or wellhead elevation, m a.s.l.; required when values are depths.",
+                ),
+                unit="m",
+            ),
+            FieldDef(
+                "screen_top",
+                FieldType.REAL,
+                L("Inizio del tratto provato", "Tested interval top"),
+                unit="m",
+            ),
+            FieldDef(
+                "screen_bottom",
+                FieldType.REAL,
+                L("Fine del tratto provato", "Tested interval bottom"),
+                unit="m",
+            ),
+            FieldDef(
+                "ref_thickness",
+                FieldType.REAL,
+                L("Spessore di riferimento", "Reference thickness"),
+                L(
+                    "Spessore b usato nell'interpretazione (K = T/b, Ss = S/b). Se vuoto si stima "
+                    "da geometria e livello statico, con un avviso.",
+                    "Thickness b used in the interpretation (K = T/b, Ss = S/b). If empty it is "
+                    "estimated from geometry and static level, with a warning.",
+                ),
+                unit="m",
+                minimum=0,
+            ),
+            FieldDef(
+                "static_level",
+                FieldType.REAL,
+                L("Livello statico", "Static level"),
+                L(
+                    "Alla data della prova, con lo stesso riferimento delle quote.",
+                    "On the test date, with the same reference as the depths.",
+                ),
+                unit="m",
+            ),
+            FieldDef(
+                "unit_id",
+                FieldType.INTEGER,
+                L("Unità idrostratigrafica", "Hydrostratigraphic unit"),
+                L(
+                    "Se vuota, l'unità con il tratto provato più lungo.",
+                    "If empty, the unit with the longest tested interval.",
+                ),
+                lookup=UNIT_LOOKUP,
+            ),
+            FieldDef("date", FieldType.DATETIME, L("Data della prova", "Test date")),
+            FieldDef(
+                "reliability",
+                FieldType.TEXT,
+                L("Affidabilità", "Reliability"),
+                choices=(
+                    _c("high", "Alta", "High"),
+                    _c("medium", "Media", "Medium"),
+                    _c("low", "Bassa", "Low"),
+                ),
+            ),
+        ),
+        milestone="M2",
+        style=LayerStyle("marker", "#b8336a", outline="#fcfcfb", size_mm=3.0, shape="square"),
+        since=2,
+    ),
+    TableDef(
         "recharge_zones",
         GeometryType.MULTIPOLYGON,
         L("Zone di ricarica", "Recharge zones"),
@@ -664,6 +818,34 @@ TABLES: tuple[TableDef, ...] = (
             ),
         ),
         style=LayerStyle("fill", "#1baf7a", outline="#1baf7a", fill_opacity=0.15, width_mm=0.4),
+    ),
+    TableDef(
+        "param_zones",
+        GeometryType.MULTIPOLYGON,
+        L("Zone dei parametri", "Parameter zones"),
+        L(
+            "Zone di un'unità con parametri propri, in param_values con object_type = zone. "
+            "Dentro la zona prevalgono sul valore uniforme dell'unità.",
+            "Zones of a unit with their own parameters, in param_values with object_type = "
+            "zone. Inside the zone they take precedence over the uniform value of the unit.",
+        ),
+        (
+            *COMMON_FEATURE_FIELDS,
+            FieldDef(
+                "unit_id",
+                FieldType.INTEGER,
+                L("Unità idrostratigrafica", "Hydrostratigraphic unit"),
+                L(
+                    "I parametri della zona valgono solo in questa unità.",
+                    "The parameters of the zone apply only to this unit.",
+                ),
+                required=True,
+                lookup=UNIT_LOOKUP,
+            ),
+        ),
+        milestone="M2",
+        style=LayerStyle("fill", "#8a5cd6", outline="#6a3fb8", fill_opacity=0.15, width_mm=0.5),
+        since=2,
     ),
     TableDef(
         "timeseries_meta",
@@ -814,6 +996,15 @@ RELATIONS: tuple[Relation, ...] = (
         parent="hydro_units",
         parent_field="fid",
         child_filter=(("object_type", "unit"),),
+    ),
+    Relation(
+        "zone_parameters",
+        L("Parametri della zona", "Zone parameters"),
+        child="param_values",
+        child_field="object_id",
+        parent="param_zones",
+        parent_field="fid",
+        child_filter=(("object_type", "zone"),),
     ),
     Relation(
         "series_values",

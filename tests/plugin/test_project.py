@@ -13,6 +13,7 @@ from phrear_qgis.client.project import (
     folder_free,
     is_project,
     layer_plan,
+    needs_migration,
     new_project_args,
     new_project_problems,
     slug,
@@ -70,7 +71,8 @@ def test_layer_plan_follows_the_schema(schema: dict[str, object]) -> None:
     ranks = [order.index(s.geometry or "") for s in layers]
     assert ranks == sorted(ranks)
     assert {s.name for s in layers} == {"domain", "wells", "fixed_head_lines", "fixed_head_areas",
-                                        "line_stations", "recharge_zones"}  # fmt: skip
+                                        "line_stations", "recharge_zones", "param_zones",
+                                        "field_tests"}  # fmt: skip
     assert plan.index(tables[0]) == len(layers)  # tables after the layers
     assert next(s for s in plan if s.name == "wells").label == "Pozzi"
     assert next(s for s in layer_plan(schema, "en") if s.name == "wells").label == "Wells"
@@ -95,4 +97,10 @@ def test_layer_sources_saved_without_the_option_are_upgraded() -> None:
 def test_table_rows(schema: dict[str, object]) -> None:
     rows = table_rows({"tables": {"wells": 2}}, schema, "it")
     assert ("Pozzi", 2) in rows and ("Dominio del modello", 0) in rows
-    assert len(rows) == 14
+    assert len(rows) == len(schema["project"]["tables"]) == 16  # type: ignore[index]
+
+
+def test_needs_migration() -> None:
+    assert needs_migration({"code": "project.migration_required", "message": {}})
+    assert not needs_migration({"code": "project.not_found"})
+    assert not needs_migration(None)

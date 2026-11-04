@@ -297,92 +297,92 @@ Salvarle prima di continuare?</translation>
             <translation>phrear {command} in corso…</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="313" />
+            <location filename="../panel.py" line="318" />
             <source>Results in {folder}</source>
             <translation>Risultati in {folder}</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="333" />
+            <location filename="../panel.py" line="338" />
             <source>No blocking errors; warnings: {n}.</source>
             <translation>Nessun errore bloccante; avvisi: {n}.</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="334" />
+            <location filename="../panel.py" line="339" />
             <source>No problems found.</source>
             <translation>Nessun problema trovato.</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="335" />
+            <location filename="../panel.py" line="340" />
             <source>Run {run_id} completed in {seconds} s.</source>
             <translation>Run {run_id} completato in {seconds} s.</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="339" />
+            <location filename="../panel.py" line="344" />
             <source>Largest budget error {pct} % (period {period}, step {step}).</source>
             <translation>Errore di bilancio massimo {pct} % (periodo {period}, passo {step}).</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="345" />
+            <location filename="../panel.py" line="350" />
             <source>Warnings: {n}.</source>
             <translation>Avvisi: {n}.</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="367" />
+            <location filename="../panel.py" line="372" />
             <source>Show the feature</source>
             <translation>Mostra la feature</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="368" />
+            <location filename="../panel.py" line="373" />
             <source>Open the form</source>
             <translation>Apri il form</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="393" />
+            <location filename="../panel.py" line="398" />
             <source>The layer {layer} of the project is not loaded.</source>
             <translation>Il layer {layer} del progetto non è caricato.</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="451" />
+            <location filename="../panel.py" line="456" />
             <source>project changed</source>
             <translation>progetto modificato</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="456" />
+            <location filename="../panel.py" line="461" />
             <source>The project has changed since this run.</source>
             <translation>Il progetto è stato modificato dopo questo run.</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="458" />
+            <location filename="../panel.py" line="463" />
             <source>Largest budget error {pct} %</source>
             <translation>Errore di bilancio massimo {pct} %</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="487" />
+            <location filename="../panel.py" line="492" />
             <source>Run {run_id} has no heads to load ({state}).</source>
             <translation>Il run {run_id} non ha carichi da caricare ({state}).</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="504" />
+            <location filename="../panel.py" line="509" />
             <source>Open the Phrear project first.</source>
             <translation>Apri prima il progetto Phrear.</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="517" />
+            <location filename="../panel.py" line="522" />
             <source>The heads of run {run_id} could not be loaded from {path}.</source>
             <translation>Non è stato possibile caricare i carichi del run {run_id} da {path}.</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="527" />
+            <location filename="../panel.py" line="532" />
             <source>The heads of run {run_id} are already loaded.</source>
             <translation>I carichi del run {run_id} sono già caricati.</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="531" />
+            <location filename="../panel.py" line="536" />
             <source>Heads of run {run_id} loaded; move through time with the temporal controller.</source>
             <translation>Carichi del run {run_id} caricati; il tempo si scorre con il controllo temporale.</translation>
         </message>
         <message>
-            <location filename="../panel.py" line="545" />
+            <location filename="../panel.py" line="550" />
             <source>{path} could not be loaded.</source>
             <translation>Non è stato possibile caricare {path}.</translation>
         </message>
@@ -412,117 +412,122 @@ Salvarle prima di continuare?</translation>
             <translation>Creazione del progetto di esempio</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="45" />
+            <location filename="../plugin.py" line="38" />
+            <source>Updating the project</source>
+            <translation>Aggiornamento del progetto</translation>
+        </message>
+        <message>
+            <location filename="../plugin.py" line="46" />
             <source>Phrear core {version}</source>
             <translation>Core di Phrear {version}</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="46" />
+            <location filename="../plugin.py" line="47" />
             <source>MODFLOW 6 {version}</source>
             <translation>MODFLOW 6 {version}</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="46" />
+            <location filename="../plugin.py" line="47" />
             <source>not found</source>
             <translation>non trovato</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="47" />
+            <location filename="../plugin.py" line="48" />
             <source>Python {version}</source>
             <translation>Python {version}</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="48" />
+            <location filename="../plugin.py" line="49" />
             <source>FloPy {flopy}, GDAL {gdal}, PROJ {proj}</source>
             <translation>FloPy {flopy}, GDAL {gdal}, PROJ {proj}</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="59" />
+            <location filename="../plugin.py" line="60" />
             <source>&amp;Phrear</source>
             <translation>&amp;Phrear</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="75" />
+            <location filename="../plugin.py" line="76" />
             <source>New Phrear project…</source>
             <translation>Nuovo progetto Phrear…</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="77" />
+            <location filename="../plugin.py" line="78" />
             <source>Open a Phrear project…</source>
             <translation>Apri un progetto Phrear…</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="79" />
+            <location filename="../plugin.py" line="80" />
             <source>Create the example project…</source>
             <translation>Crea il progetto di esempio…</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="80" />
+            <location filename="../plugin.py" line="81" />
             <source>Project summary</source>
             <translation>Riepilogo del progetto</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="86" />
+            <location filename="../plugin.py" line="87" />
             <source>Phrear panel</source>
             <translation>Pannello Phrear</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="92" />
+            <location filename="../plugin.py" line="93" />
             <source>Check the Phrear environment</source>
             <translation>Verifica l'ambiente di Phrear</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="93" />
+            <location filename="../plugin.py" line="94" />
             <source>Phrear settings…</source>
             <translation>Impostazioni di Phrear…</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="94" />
+            <location filename="../plugin.py" line="95" />
             <source>About Phrear</source>
             <translation>Informazioni su Phrear</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="148" />
+            <location filename="../plugin.py" line="149" />
             <source>{problems} Open Phrear settings to fix it.</source>
             <translation>{problems} Apri le impostazioni di Phrear per correggere.</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="180" />
+            <location filename="../plugin.py" line="181" />
             <source>Running phrear {args}</source>
             <translation>Esecuzione di phrear {args}</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="188" />
+            <location filename="../plugin.py" line="189" />
             <source>{action} in progress…</source>
             <translation>{action} in corso…</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="246" />
+            <location filename="../plugin.py" line="247" />
             <source>The core could not be started: {error}</source>
             <translation>Impossibile avviare il core ({error}).</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="248" />
+            <location filename="../plugin.py" line="249" />
             <source>The command was cancelled.</source>
             <translation>Il comando è stato annullato.</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="250" />
+            <location filename="../plugin.py" line="251" />
             <source>The core speaks a different version of the event protocol ({found}); update the plugin and the core together.</source>
             <translation>Il core usa un'altra versione del protocollo degli eventi ({found}); aggiorna insieme plugin e core.</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="257" />
+            <location filename="../plugin.py" line="258" />
             <source>The core stopped with exit code {code}.</source>
             <translation>Il core si è fermato con codice di uscita {code}.</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="266" />
+            <location filename="../plugin.py" line="267" />
             <source>Phrear environment</source>
             <translation>Ambiente di Phrear</translation>
         </message>
         <message>
-            <location filename="../plugin.py" line="292" />
+            <location filename="../plugin.py" line="293" />
             <source>Phrear: groundwater modelling for QGIS with MODFLOW 6.
 
 Plugin: GPL-2.0-or-later. Core: EUPL-1.2.
@@ -537,87 +542,107 @@ Copyright (C) 2026 Michele.
 https://github.com/miqqqqqqq/phrear</translation>
         </message>
         <message>
-            <location filename="../project.py" line="111" />
+            <location filename="../project.py" line="112" />
             <source>Open a Phrear project</source>
             <translation>Apri un progetto Phrear</translation>
         </message>
         <message>
-            <location filename="../project.py" line="118" />
+            <location filename="../project.py" line="119" />
             <source>Create the example project</source>
             <translation>Crea il progetto di esempio</translation>
         </message>
         <message>
-            <location filename="../project.py" line="167" />
+            <location filename="../project.py" line="168" />
             <source>{folder} has no project.toml or model.gpkg.</source>
             <translation>In {folder} mancano project.toml o model.gpkg.</translation>
         </message>
         <message>
-            <location filename="../project.py" line="173" />
+            <location filename="../project.py" line="174" />
             <source>The project is already open in the layer group {group}.</source>
             <translation>Il progetto è già aperto nel gruppo di layer {group}.</translation>
         </message>
         <message>
-            <location filename="../project.py" line="210" />
+            <location filename="../project.py" line="211" />
+            <source>Update the project now? Phrear first copies project.toml and model.gpkg into the backups folder of the project.</source>
+            <translation>Aggiornare ora il progetto? Phrear copia prima project.toml e model.gpkg nella cartella backups del progetto.</translation>
+        </message>
+        <message>
+            <location filename="../project.py" line="217" />
+            <source>The layers of the project are closed and loaded again.</source>
+            <translation>I layer del progetto vengono chiusi e ricaricati.</translation>
+        </message>
+        <message>
+            <location filename="../project.py" line="220" />
+            <source>Update the project</source>
+            <translation>Aggiorna il progetto</translation>
+        </message>
+        <message>
+            <location filename="../project.py" line="237" />
+            <source>Project updated to data schema {version}; backup copy in {folder}.</source>
+            <translation>Progetto aggiornato allo schema dei dati {version}; copia di backup in {folder}.</translation>
+        </message>
+        <message>
+            <location filename="../project.py" line="275" />
             <source>Phrear – {name}</source>
             <translation>Phrear – {name}</translation>
         </message>
         <message>
-            <location filename="../project.py" line="212" />
+            <location filename="../project.py" line="277" />
             <source>Conceptual model</source>
             <translation>Modello concettuale</translation>
         </message>
         <message>
-            <location filename="../project.py" line="214" />
+            <location filename="../project.py" line="279" />
             <source>Tables</source>
             <translation>Tabelle</translation>
         </message>
         <message>
-            <location filename="../project.py" line="237" />
+            <location filename="../project.py" line="302" />
             <source>Some tables or relations could not be loaded: {names}</source>
             <translation>Alcune tabelle o relazioni non sono state caricate: {names}</translation>
         </message>
         <message>
-            <location filename="../project.py" line="244" />
+            <location filename="../project.py" line="309" />
             <source>Project {name} opened.</source>
             <translation>Progetto {name} aperto.</translation>
         </message>
         <message>
-            <location filename="../project.py" line="266" />
+            <location filename="../project.py" line="331" />
             <source>Open or create a Phrear project first.</source>
             <translation>Prima apri o crea un progetto Phrear.</translation>
         </message>
         <message>
-            <location filename="../project.py" line="283" />
+            <location filename="../project.py" line="350" />
             <source>yes</source>
             <translation>sì</translation>
         </message>
         <message>
-            <location filename="../project.py" line="283" />
+            <location filename="../project.py" line="350" />
             <source>no</source>
             <translation>no</translation>
         </message>
         <message>
-            <location filename="../project.py" line="285" />
+            <location filename="../project.py" line="352" />
             <source>Project {name}</source>
             <translation>Progetto {name}</translation>
         </message>
         <message>
-            <location filename="../project.py" line="286" />
+            <location filename="../project.py" line="353" />
             <source>Folder {path}</source>
             <translation>Cartella {path}</translation>
         </message>
         <message>
-            <location filename="../project.py" line="287" />
+            <location filename="../project.py" line="354" />
             <source>Coordinate reference system EPSG:{epsg} ({crs})</source>
             <translation>Sistema di riferimento EPSG:{epsg} ({crs})</translation>
         </message>
         <message>
-            <location filename="../project.py" line="290" />
+            <location filename="../project.py" line="357" />
             <source>Model period from {start} to {end}, initial steady state {steady}</source>
             <translation>Periodo del modello dal {start} al {end}, stato stazionario iniziale {steady}</translation>
         </message>
         <message>
-            <location filename="../project.py" line="300" />
+            <location filename="../project.py" line="367" />
             <source>Content hash {hash}</source>
             <translation>Hash del contenuto {hash}</translation>
         </message>

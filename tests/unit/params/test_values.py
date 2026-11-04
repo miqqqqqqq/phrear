@@ -171,12 +171,13 @@ def test_unknown_unit(valid_site: Project) -> None:
     assert info.value.code == "params.unknown_unit"
 
 
-def test_param_mode_other_than_uniform(valid_site: Project) -> None:
+def test_k_from_tests_is_not_yet_available(valid_site: Project) -> None:
     with gpkg.connect(valid_site.gpkg_path) as conn:
-        conn.execute('UPDATE "hydro_units" SET param_mode = ? WHERE position = 2', ("zones",))
+        conn.execute('UPDATE "hydro_units" SET k_from_tests = 1 WHERE position = 2')
     with pytest.raises(ParameterError) as info:
         load_parameters(valid_site)
     assert info.value.code == "params.mode_not_available"
+    assert info.value.ref is not None and info.value.ref.field == "k_from_tests"
 
 
 def test_implausible_value_is_a_warning(valid_site: Project) -> None:

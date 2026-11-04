@@ -327,14 +327,15 @@ CATALOG: dict[str, Message] = {
         hint_en="Check the raster of surface 0 and the vertical datum of the DEM.",
     ),
     "params.mode_not_available": Message(
-        it="L'unità {unit} usa l'assegnazione dei parametri «{mode}», disponibile da M2.",
-        en="Unit {unit} uses the parameter assignment '{mode}', available from M2.",
-        hint_it="Per ora imposta param_mode = uniform e un valore per parametro.",
-        hint_en="For now set param_mode = uniform and one value per parameter.",
+        it="L'unità {unit} usa «{mode}», non ancora disponibile in questa versione.",
+        en="Unit {unit} uses '{mode}', not yet available in this version.",
+        hint_it="Per ora indica valori uniformi per unità.",
+        hint_en="For now give uniform values per unit.",
     ),
     "params.source_not_available": Message(
-        it="Il parametro {param} dell'unità {unit} rimanda a {what}, disponibile da M2.",
-        en="Parameter {param} of unit {unit} refers to {what}, available from M2.",
+        it="Il parametro {param} dell'unità {unit} rimanda a {what}, non ancora disponibile "
+        "in questa versione.",
+        en="Parameter {param} of unit {unit} refers to {what}, not yet available in this version.",
         hint_it="Per ora indica un valore uniforme nel campo value.",
         hint_en="For now give a uniform value in the value field.",
     ),

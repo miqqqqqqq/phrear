@@ -22,6 +22,15 @@ GPKG_FILE = "model.gpkg"
 GEOMETRY_ORDER = {"Point": 0, "MultiLineString": 1, "MultiPolygon": 2}
 
 
+#: Code of the core error for a project written by an older data schema.
+MIGRATION_REQUIRED = "project.migration_required"
+
+
+def needs_migration(failure: dict[str, Any] | None) -> bool:
+    """True when a command failed because the project must be migrated first."""
+    return bool(failure) and (failure or {}).get("code") == MIGRATION_REQUIRED
+
+
 def is_project(folder: Path) -> bool:
     return (folder / PROJECT_FILE).is_file() and (folder / GPKG_FILE).is_file()
 

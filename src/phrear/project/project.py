@@ -109,7 +109,9 @@ class Project:
         crs_name(config.crs)
         if not project.gpkg_path.is_file():
             raise ProjectError("project.gpkg_missing", path=str(root))
-        missing = gpkg.missing_tables(project.gpkg_path)
+        # A project still to migrate has the tables of its own schema version.
+        expected = tuple(t for t in TABLES if t.since <= config.schema_version)
+        missing = gpkg.missing_tables(project.gpkg_path, expected)
         if missing:
             raise ProjectError("project.gpkg_tables_missing", tables=", ".join(missing))
         return project

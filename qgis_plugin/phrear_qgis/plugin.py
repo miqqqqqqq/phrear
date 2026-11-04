@@ -35,6 +35,7 @@ def action_text(command: str) -> str:
         "schema": tr("Reading the data schema"),
         "new": tr("Creating the project"),
         "example": tr("Creating the example project"),
+        "migrate": tr("Updating the project"),
     }
     return texts.get(command, f"phrear {command}")
 

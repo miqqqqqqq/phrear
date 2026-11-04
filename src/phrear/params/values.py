@@ -241,7 +241,7 @@ def load_parameters(project: Project, errors: ErrorCollector | None = None) -> P
     errors = errors or ErrorCollector()
     with gpkg.connect(project.gpkg_path) as conn:
         units = conn.execute(
-            'SELECT fid, position, name, param_mode, convertible FROM "hydro_units" '
+            'SELECT fid, position, name, k_from_tests, convertible FROM "hydro_units" '
             "ORDER BY position"
         ).fetchall()
         rows = conn.execute(
@@ -276,13 +276,12 @@ def load_parameters(project: Project, errors: ErrorCollector | None = None) -> P
 
     result: list[UnitParameters] = []
     warnings: list[Problem] = []
-    for fid, position, name, mode, convertible in units:
+    for fid, position, name, from_tests, convertible in units:
         label = f"{position} ({name})"
-        ref = ObjectRef(kind="field", layer="hydro_units", fid=fid, field="param_mode")
-        if (mode or "uniform") != "uniform":
-            errors.fail(
-                ParameterError("params.mode_not_available", unit=label, mode=str(mode), ref=ref)
-            )
+        if from_tests:
+            ref = ObjectRef(kind="field", layer="hydro_units", fid=fid, field="k_from_tests")
+            mode = Localized("K interpolata dalle prove", "K interpolated from tests")
+            errors.fail(ParameterError("params.mode_not_available", unit=label, mode=mode, ref=ref))
             continue
         values: dict[str, ParamValue] = {}
         failed: set[str] = set()

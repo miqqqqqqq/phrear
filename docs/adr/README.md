@@ -27,6 +27,7 @@ Ogni decisione presa durante lo sviluppo ha un file numerato in questa cartella 
 | [0021](0021-plugin-pannello-controllo-esecuzione.md) | Plugin QGIS: pannello di controllo ed esecuzione | accettata | 47 |
 | [0022](0022-plugin-risultati.md) | Plugin QGIS: risultati, elenco dei run, griglia e celle | accettata | 48 |
 | [0023](0023-accettazione-e-chiusura-m1b.md) | Accettazione e chiusura di M1b | accettata | 49 |
+| [0024](0024-m2-schema-2-e-regole-dei-parametri.md) | M2: schema 2, migrazione e regole di assegnazione dei parametri | accettata | 50 |
 
 ## Modello
 

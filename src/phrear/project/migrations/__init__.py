@@ -3,7 +3,7 @@
 ``MIGRATIONS[n]`` upgrades a project from schema ``n`` to ``n + 1`` in place.
 Every migration is tested on a project of the previous version. Before the first
 migration step a backup of project.toml and model.gpkg is made under ``backups/``.
-Schema 1 is the first version, so no migration exists yet.
+Migrations are registered at the end of this module, one module per version.
 """
 
 from __future__ import annotations
@@ -18,6 +18,7 @@ Migration = Callable[[Path], None]
 """Upgrade the project in the given folder by one schema version."""
 
 MIGRATIONS: dict[int, Migration] = {}
+"""Filled at the end of the module, after the helpers the migrations may use."""
 
 
 @dataclass(frozen=True)
@@ -47,3 +48,12 @@ def backup_project(root: Path, files: tuple[str, ...], version: int) -> Path:
         if source.exists():
             shutil.copy2(source, target / name)
     return target
+
+
+def _register() -> None:
+    from phrear.project.migrations import schema2
+
+    MIGRATIONS[1] = schema2.upgrade
+
+
+_register()

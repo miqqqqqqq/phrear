@@ -278,9 +278,9 @@ Campi comuni a tutti i layer di feature: `fid`, `name`, `active`, `notes`, `crea
 | Layer o tabella | Geometria | Campi principali |
 |---|---|---|
 | `domain` | Poligono | contorno attivo del modello |
-| `hydro_units` | – | `position` (1 = unità più alta), `name`, `geometry_mode` (raster/sondaggi/mista), `param_mode` (uniforme/zone/raster/interpolato), `convertible`, `sublayers`; i valori dei parametri stanno in `param_values` |
+| `hydro_units` | – | `position` (1 = unità più alta), `name`, `geometry_mode` (raster/sondaggi/mista), `convertible`, `sublayers`, `k_from_tests` (K interpolata dalle prove), `interp_max_distance` (distanza massima del campo interpolato); i valori dei parametri stanno in `param_values` |
 | `surfaces` | – | `surface_index` (0 = top del modello; i = bottom dell'unità i), `raster_path`, `source`, `vertical_datum` |
-| `param_zones` | Poligono | `unit_id`; i valori stanno in `param_values` |
+| `param_zones` | Poligono | `unit_id` (fid dell'unità); i valori stanno in `param_values` con `object_type = zone` |
 | `param_values` | – | `object_type` (unità, zona), `object_id`, `param` (kh, kv, anisotropy, ss, sy, ne, …), `value` oppure `raster_path`, `unit`, `source`, `min`, `max`, `std_log10` |
 | `field_tests` | Punto | `type` (pompaggio, slug, Lefranc, Lugeon, granulometria), `result_param` (T, K, S), `value`, `unit`, `screen_top`, `screen_bottom`, `z_ref`, `depth_mode`, `ref_thickness` (spessore usato nell'interpretazione), `static_level` (livello statico alla data della prova), `unit_id`, `date`, `reliability` |
 | `boreholes` | Punto | `code`, `z_collar`, `depth`, `source`, `reliability` |
@@ -376,11 +376,11 @@ Parametri richiesti da MF6 per il flusso:
 Parametro richiesto dal tracciamento di particelle (PRT, pacchetto MIP) e in fase 3 dal trasporto:
 - porosità efficace n_e.
 
-Modalità di assegnazione per unità. Si possono combinare; la priorità è raster > campo interpolato > zone > uniforme.
+Modalità di assegnazione per unità. Si combinano cella per cella; la priorità è raster > campo interpolato > zone > uniforme (ADR 0024).
 1. Valore uniforme.
 2. Zone poligonali.
 3. Raster.
-4. Campo interpolato in log K dai punti di prova (M2).
+4. Campo interpolato in log K dai punti di prova (M2): inverso della distanza al quadrato su log₁₀K, attivo per le unità con `k_from_tests`, entro `interp_max_distance` dalla prova più vicina (vuota = tutta l'unità). Si interpola solo Kh; Kv viene dall'anisotropia dell'unità. Una prova senza `unit_id` va all'unità con il tratto provato più lungo, con un avviso se il tratto attraversa più unità.
 
 Ogni valore sta in `param_values` e registra:
 - `unit`: unità di misura originale;
@@ -864,7 +864,7 @@ Regole:
 
 **Accettazione:** superfici interpolate con incertezza su un caso reale, confrontate con i raster esistenti.
 
-**Stato attuale:** M1a completata il 2026-11-03 in 12 incrementi: scheletro e CI; unità, errori ed eventi; formato del progetto; tempo; griglia e superfici; parametri e carichi iniziali; condizioni al contorno; controlli; build e run; export NetCDF UGRID; verifica analitica; progetto di esempio e guide. M1b completata il 2026-11-04 in 6 incrementi: 1 (scheletro del plugin per QGIS 4, impostazioni, verifica dell'ambiente con `phrear env`, traduzioni IT/EN, ZIP e collegamento di sviluppo), 2 (nuovo progetto, apertura con layer e tabelle dallo schema, progetto di esempio, riepilogo, richiesta di salvare le modifiche in sospeso, indicatore di esecuzione), 3 (form, liste di valori, relazioni e stili generati dallo schema; date salvate con l'ora inserita), 4 (pannello con Controlla, Esegui e Annulla, esito per fase, problemi collegati alla feature, log), 5 (carichi come mesh layer temporale, elenco dei run con `phrear runs`, griglia e celle assegnate) e 6 (accettazione: carichi del plugin identici a quelli da CLI in CI e in QGIS 4.2.3; guida del plugin con percorso guidato e modello nuovo). La prova dell'interfaccia su Windows resta nella checklist della guida del plugin.
+**Stato attuale:** M1a completata il 2026-11-03 in 12 incrementi: scheletro e CI; unità, errori ed eventi; formato del progetto; tempo; griglia e superfici; parametri e carichi iniziali; condizioni al contorno; controlli; build e run; export NetCDF UGRID; verifica analitica; progetto di esempio e guide. M1b completata il 2026-11-04 in 6 incrementi: 1 (scheletro del plugin per QGIS 4, impostazioni, verifica dell'ambiente con `phrear env`, traduzioni IT/EN, ZIP e collegamento di sviluppo), 2 (nuovo progetto, apertura con layer e tabelle dallo schema, progetto di esempio, riepilogo, richiesta di salvare le modifiche in sospeso, indicatore di esecuzione), 3 (form, liste di valori, relazioni e stili generati dallo schema; date salvate con l'ora inserita), 4 (pannello con Controlla, Esegui e Annulla, esito per fase, problemi collegati alla feature, log), 5 (carichi come mesh layer temporale, elenco dei run con `phrear runs`, griglia e celle assegnate) e 6 (accettazione: carichi del plugin identici a quelli da CLI in CI e in QGIS 4.2.3; guida del plugin con percorso guidato e modello nuovo). La prova dell'interfaccia su Windows resta nella checklist della guida del plugin. M2 in corso: completato l'incremento 1 (schema 2 con zone dei parametri e prove in sito, migrazione con backup, proposta di aggiornamento nel plugin).
 
 ---
 
@@ -964,3 +964,4 @@ Regole:
 | 47 | 2026-11-04 | Pannello Phrear agganciabile con Controlla, Esegui e Annulla, avanzamento, esito per fase (etichette dal risultato di `check`), problemi con luogo, codice, suggerimento e collegamenti alla feature e al suo form, log con l'ora locale; regole sul nome del run solo nel core; layer del progetto aperti con `NOLOCK=NO` (ADR 0021) | Errori accanto alla mappa mentre si correggono; nessuna regola duplicata; estensione dei layer calcolabile dopo un salvataggio | Errori in finestre o nella barra dei messaggi; vista ad albero; estensione aggiornata dal core |
 | 48 | 2026-11-04 | Comando `runs` con stato, etichette, confronto con il progetto attuale e prodotti; stato `running` nel manifest durante MF6; dataset predefinito degli exporter per nome MDAL; carichi come mesh layer con rampa su tutti i tempi, un colore per cella e controllo temporale; scheda Run del pannello; griglia e celle assegnate caricate dagli export; `results.file_locked` per un export aperto (ADR 0022) | Risultati visibili senza passi manuali; si vede se un run corrisponde ancora ai dati; nessun formato del core duplicato | Lettura dei manifest nel plugin; interpolazione ai nodi; un fotogramma per passo |
 | 49 | 2026-11-04 | Accettazione di M1b con confronto esatto dei run (`compare-runs`: `gwf.hds` byte per byte, variabili di `heads.nc`, input di MF6 senza l'ora di FloPy) tra il comando del plugin e la CLI in CI, e tra il pannello di QGIS e la CLI; carichi aperti con il driver Ugrid; guida del plugin con percorso guidato e modello nuovo (ADR 0023) | Stesso core e stesso lockfile: ogni differenza è un errore; prova ripetibile anche dall'utente | Confronto con tolleranza; confronto di tutti i file del run; QGIS nella CI |
+| 50 | 2026-11-04 | M2: IDW su log₁₀K, priorità per cella raster > interpolato > zone > uniforme con distanza massima del campo interpolato, prova → unità da `unit_id` o dal tratto provato più lungo, solo Kh dalle prove; schema 2 con `param_zones`, `field_tests`, `k_from_tests`, `interp_max_distance` e senza `param_mode`; migrazione 1 → 2 provata su un progetto dello schema 1 conservato nei test (ADR 0024) | Scelte approvate dall'utente; un solo modo di combinare le fonti; migrazione provata sui file reali | Kriging subito; una modalità per unità; `unit_id` obbligatorio; Ss interpolato |

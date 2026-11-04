@@ -57,10 +57,12 @@ Menu Plugin → Phrear:
 
 All'apertura, layer e tabelle di `model.gpkg` finiscono in un gruppo **Phrear – <nome>** in cima al pannello dei layer:
 
-- **Modello concettuale**: pozzi e stazioni, poi linee a carico imposto, poi dominio, aree a carico imposto e zone di ricarica, così le feature piccole stanno sopra quelle grandi;
+- **Modello concettuale**: pozzi, stazioni e prove in sito, poi linee a carico imposto, poi dominio, aree a carico imposto, zone di ricarica e zone dei parametri, così le feature piccole stanno sopra quelle grandi;
 - **Tabelle** (chiuso): unità, superfici, parametri, serie temporali, scenari, registro delle modifiche.
 
 I nomi sono quelli dello schema del core, in italiano o in inglese secondo la lingua di QGIS. Se il progetto QGIS è vuoto, il suo sistema di riferimento diventa quello del progetto Phrear; la mappa si centra sul dominio. Un progetto già aperto non viene caricato due volte. Il progetto Phrear aperto resta associato al progetto QGIS quando lo salvi.
+
+**Progetti di una versione precedente.** Se il progetto usa uno schema dei dati più vecchio, il plugin propone di aggiornarlo, all'apertura o al primo comando. Prima dell'aggiornamento (`phrear migrate`) project.toml e model.gpkg vengono copiati nella cartella `backups` del progetto; i layer già caricati vengono chiusi e ricaricati.
 
 I layer si modificano con gli strumenti standard di QGIS. Prima di ogni comando del core, se un layer del progetto ha modifiche non salvate, il plugin chiede se salvarle, scartarle o annullare il comando, perché il core legge il GeoPackage e non vedrebbe le modifiche in sospeso.
 
@@ -92,6 +94,7 @@ All'apertura il plugin configura ogni layer secondo lo schema del core. Tutto vi
 | Form | Mostra |
 |---|---|
 | Unità idrostratigrafica | i suoi parametri (K, Ss, Sy, …) |
+| Zona dei parametri | i suoi parametri, che nella zona prevalgono su quelli dell'unità |
 | Serie temporale | le coppie data–valore |
 | Linea o area a carico imposto | le sue stazioni |
 
@@ -99,7 +102,7 @@ Dal form del padre si aggiungono i figli già collegati: un parametro aggiunto d
 
 **Date.** Date e ore sono l'ora civile del modello, senza fuso. Il plugin le salva in modo che l'ora resti quella inserita, anche con il calcolatore di campi; nel GeoPackage possono comparire con lo scarto di fuso (`2024-07-15T00:00:00+02:00`), che il core ignora.
 
-**Stili.** Pozzi blu, stazioni arancioni, linee a carico imposto blu scuro, aree a carico imposto e zone di ricarica con riempimento trasparente, dominio con il solo contorno.
+**Stili.** Pozzi blu, stazioni arancioni, prove in sito come quadrati rosso scuro, linee a carico imposto blu scuro, aree a carico imposto, zone di ricarica e zone dei parametri (viola) con riempimento trasparente, dominio con il solo contorno.
 
 ## 6. Controllo ed esecuzione
 

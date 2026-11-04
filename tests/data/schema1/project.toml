@@ -1,0 +1,49 @@
+schema_version = 1
+software_version_created = "0.1.0.dev0"
+software_version_last_saved = "0.1.0.dev0"
+name = "Esempio - piana alluvionale"
+description = "Sito sintetico di esempio: falda alluvionale tra un limite a carico imposto e un fiume, con un pozzo idropotabile, un pozzo irriguo stagionale e ricarica per zone."
+crs = 7791
+
+[units]
+discharge = "l/s"
+conductivity = "m/s"
+recharge = "mm/anno"
+storage = "1/m"
+
+[model]
+start_date = 2024-01-01
+end_date = 2025-01-01
+steady_initial = true
+period_breaks = []
+
+[time]
+dt_initial_d = 1.0
+tsmult = 1.2
+dt_max_d = 30.0
+min_period_d = 1.0
+
+[grid]
+type = "dis"
+rotation_deg = 0.0
+min_thickness_m = 0.5
+activation = "centroid"
+min_area_fraction = 0.5
+dem_tolerance_m = 1.0
+max_cells_warning = 1000000
+cell_size_m = 50.0
+
+[solver]
+preset = "standard"
+
+[options]
+newton = true
+xt3d = "auto"
+
+[dem]
+raster_path = "rasters/dem.tif"
+vertical_datum = "m s.l.m. (sintetico)"
+
+[initial_heads]
+mode = "constant"
+value_m = 44.0

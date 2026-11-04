@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from phrear import cli
+from phrear.project.schema import SCHEMA_VERSION
 
 
 def _json_events(argv: list[str]) -> tuple[int, list[dict[str, Any]]]:
@@ -76,4 +77,4 @@ def test_migrate_current_project(tmp_path: Path) -> None:
     root = tmp_path / "sito"
     _text(["new", str(root), "--start", "2020-01-01", "--end", "2021-01-01"])
     code, out, _ = _text(["migrate", str(root)])
-    assert code == 0 and "già allo schema 1" in out
+    assert code == 0 and f"già allo schema {SCHEMA_VERSION}" in out
