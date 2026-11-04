@@ -768,7 +768,7 @@ Regole:
 
 **Accettazione:** il progetto di esempio di M1a eseguito dal plugin dà risultati identici a quelli da CLI; guida rapida per l'utente del plugin.
 
-**Esito (ADR 0018–0023):** risultati identici (`gwf.hds` byte per byte, ogni valore di `heads.nc`, file di input di MF6) tra il percorso di calcolo del plugin e la CLI in CI, e tra il pannello di QGIS 4.2.3 e la CLI (`docs/verification/accettazione-m1b.md`); guida in `docs/guida-plugin.md`. Prova su Windows dell'utente da completare.
+**Esito (ADR 0018–0023):** risultati identici (`gwf.hds` byte per byte, ogni valore di `heads.nc`, file di input di MF6) tra il percorso di calcolo del plugin e la CLI in CI, e tra il pannello di QGIS 4.2.3 e la CLI (`docs/verification/accettazione-m1b.md`); guida in `docs/guida-plugin.md`. Chiusa con il via libera dell'utente; la prova dell'interfaccia su Windows (guida, sezione 8) resta da riportare.
 
 ### M2 – Parametri completi
 
@@ -864,7 +864,7 @@ Regole:
 
 **Accettazione:** superfici interpolate con incertezza su un caso reale, confrontate con i raster esistenti.
 
-**Stato attuale:** M1a completata il 2026-11-03 in 12 incrementi: scheletro e CI; unità, errori ed eventi; formato del progetto; tempo; griglia e superfici; parametri e carichi iniziali; condizioni al contorno; controlli; build e run; export NetCDF UGRID; verifica analitica; progetto di esempio e guide. M1b: completati i 6 incrementi, cioè 1 (scheletro del plugin per QGIS 4, impostazioni, verifica dell'ambiente con `phrear env`, traduzioni IT/EN, ZIP e collegamento di sviluppo), 2 (nuovo progetto, apertura con layer e tabelle dallo schema, progetto di esempio, riepilogo, richiesta di salvare le modifiche in sospeso, indicatore di esecuzione), 3 (form, liste di valori, relazioni e stili generati dallo schema; date salvate con l'ora inserita), 4 (pannello con Controlla, Esegui e Annulla, esito per fase, problemi collegati alla feature, log), 5 (carichi come mesh layer temporale, elenco dei run con `phrear runs`, griglia e celle assegnate) e 6 (accettazione: carichi del plugin identici a quelli da CLI in CI e in QGIS 4.2.3; guida del plugin con percorso guidato e modello nuovo). Manca la conferma dell'utente su Windows per chiudere M1b.
+**Stato attuale:** M1a completata il 2026-11-03 in 12 incrementi: scheletro e CI; unità, errori ed eventi; formato del progetto; tempo; griglia e superfici; parametri e carichi iniziali; condizioni al contorno; controlli; build e run; export NetCDF UGRID; verifica analitica; progetto di esempio e guide. M1b completata il 2026-11-04 in 6 incrementi: 1 (scheletro del plugin per QGIS 4, impostazioni, verifica dell'ambiente con `phrear env`, traduzioni IT/EN, ZIP e collegamento di sviluppo), 2 (nuovo progetto, apertura con layer e tabelle dallo schema, progetto di esempio, riepilogo, richiesta di salvare le modifiche in sospeso, indicatore di esecuzione), 3 (form, liste di valori, relazioni e stili generati dallo schema; date salvate con l'ora inserita), 4 (pannello con Controlla, Esegui e Annulla, esito per fase, problemi collegati alla feature, log), 5 (carichi come mesh layer temporale, elenco dei run con `phrear runs`, griglia e celle assegnate) e 6 (accettazione: carichi del plugin identici a quelli da CLI in CI e in QGIS 4.2.3; guida del plugin con percorso guidato e modello nuovo). La prova dell'interfaccia su Windows resta nella checklist della guida del plugin.
 
 ---
 

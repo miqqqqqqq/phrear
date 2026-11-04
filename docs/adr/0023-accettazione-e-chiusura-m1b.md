@@ -23,7 +23,7 @@ La sezione 24 chiede per M1b che il progetto di esempio eseguito dal plugin dia 
   Gli esiti sono in `docs/verification/accettazione-m1b.md`, con la stessa prova da ripetere su Windows.
 - **Carichi con il driver indicato.** Il plugin apre `heads.nc` come `Ugrid:"<file>"`. Senza driver MDAL prova prima gli altri formati, e le librerie HDF5 riempiono l'output di QGIS di diagnostica.
 - **Guida del plugin.** `docs/guida-plugin.md` ha ora un percorso guidato di dieci passi sul progetto di esempio, dalla creazione ai carichi nel tempo, e i passi per un modello nuovo. I passi seguono l'ordine in cui `check` chiede i dati mancanti, verificato su un progetto costruito passo per passo. Le impostazioni di `project.toml` si modificano per ora con un editor di testo.
-- **Chiusura.** M1b è chiusa con la prova su Windows dell'utente: checklist degli incrementi 3–5 e confronto del documento di accettazione.
+- **Chiusura.** M1b è chiusa il 2026-11-04 con il via libera dell'utente. Il percorso di calcolo del plugin è già provato su Windows dalla CI; la prova dell'interfaccia su Windows (percorso guidato della guida e confronto del documento di accettazione) resta da riportare.
 
 ## Alternative scartate
 
@@ -33,7 +33,7 @@ La sezione 24 chiede per M1b che il progetto di esempio eseguito dal plugin dia 
 
 ## Conseguenze
 
-- I criteri di accettazione di M1b sono soddisfatti in CI e in QGIS 4.2.3 su Linux; resta la conferma su Windows.
+- I criteri di accettazione di M1b sono soddisfatti in CI su Windows e in QGIS 4.2.3 su Linux.
 - Restano per le milestone successive:
   - un editor delle impostazioni di `project.toml` nel plugin;
   - le procedure guidate (sez. 18);
