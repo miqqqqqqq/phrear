@@ -121,6 +121,10 @@ def execute(run: BuiltRun, on_step: Callable[[int, int], None] | None = None) ->
     """Run MF6 on a built run and record the outcome in its manifest."""
     executable = mf6_executable()
     started = datetime.now().astimezone()
+    # A run stopped from outside (cancelled, killed) stays "running" in its manifest.
+    data = read_manifest(run.folder)
+    data["run"] = {"status": "running", "started": started.isoformat(timespec="seconds")}
+    write_manifest(run.folder, data)
     outcome = run_mf6(run.folder, executable, on_step)
     error = outcome_error(run, outcome)
     worst = worst_discrepancy(run, outcome)

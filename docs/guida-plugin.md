@@ -118,9 +118,32 @@ Dopo la correzione si salva e si preme di nuovo Controlla.
 
 **Log.** Ora, avvio e fine di ogni comando, avvisi, errori e cartella dei risultati. I dettagli completi restano nel pannello dei messaggi di log, scheda Phrear.
 
-Dopo un run riuscito lo stato riporta la durata e l'errore di bilancio massimo, con periodo e passo. I carichi si caricano per ora a mano come mesh layer (guida CLI, sezione 6); il caricamento automatico arriva con il prossimo incremento.
+Dopo un run riuscito lo stato riporta la durata e l'errore di bilancio massimo, con periodo e passo, e i carichi si caricano da soli (sezione 7).
 
-## 7. Problemi frequenti
+**Griglia e celle.** Per controllare il modello prima del run:
+
+- **Mostra la griglia** costruisce la griglia (`phrear grid --export`) e ne carica le celle, con tetto, fondi, spessori e IDOMAIN di ogni layer negli attributi;
+- **Mostra le celle assegnate** (`phrear bc --export`) carica le celle che ricevono pozzi, carichi imposti e ricarica, colorate come il layer da cui vengono. Negli attributi ci sono pacchetto, feature di origine, layer, riga, colonna, moltiplicatore e serie.
+
+I layer finiscono nel sottogruppo **Griglia e celle** e vengono sostituiti a ogni nuovo export.
+
+## 7. Risultati
+
+**Carichi.** I carichi di un run diventano un mesh layer **Carichi – <run>** nel sottogruppo **Risultati**.
+
+- Si vede la superficie freatica o piezometrica, cioè il carico della prima cella attiva satura dall'alto. Gli altri dataset (carico per layer, tetto, fondi, IDOMAIN) si scelgono in Proprietà del layer → Simbologia.
+- La scala di colori va dal minimo al massimo su tutti i tempi, così i colori restano confrontabili da un tempo all'altro. Ogni cella ha un solo colore, senza interpolazione.
+- Il tempo si scorre con il **controllo temporale** di QGIS (icona dell'orologio nella barra di navigazione della mappa): l'intervallo è già quello del modello, un fotogramma al giorno. Il primo istante è lo stato stazionario iniziale, alla data di inizio.
+
+Le celle inattive, asciutte o a passaggio verticale restano vuote.
+
+**Elenco dei run.** Scheda **Run** del pannello: nome, data, stato e durata di ogni run, dal più recente. Lo stato è uno tra completato, non riuscito, costruito ma non eseguito, in corso o interrotto, incompleto. «Progetto modificato» indica che il progetto è cambiato dopo il run, quindi i risultati non corrispondono più ai dati attuali.
+
+- **Carica i carichi**, o doppio clic, carica i carichi di un run completato;
+- **Apri la cartella** apre la cartella del run, con file di MODFLOW 6, listing, bilancio e manifest;
+- **Aggiorna** rilegge l'elenco.
+
+## 8. Problemi frequenti
 
 | Messaggio | Causa e rimedio |
 |---|---|
@@ -130,5 +153,4 @@ Dopo un run riuscito lo stato riporta la durata e l'errore di bilancio massimo, 
 | Il core usa un'altra versione del protocollo degli eventi | plugin e core vengono da versioni diverse del repository; aggiorna entrambi con `git pull` |
 | Il run «…» esiste già | ogni run ha una cartella sua che non viene sovrascritta; scegli un altro nome o lascia il campo vuoto |
 | L'identificativo del run non è valido | solo lettere, cifre, `_` e `-`, senza spazi |
-
-Caricamento dei risultati ed elenco dei run arrivano con il prossimo incremento di M1b.
+| Non riesco a sostituire …\exports\grid.gpkg | il file è aperto in un altro programma, o in un altro progetto QGIS; chiudilo e ripeti |

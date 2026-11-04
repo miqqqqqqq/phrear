@@ -81,6 +81,12 @@ Nella cartella del run:
 - `gwf.hds`, `gwf.cbc`, `gwf.bud.csv`: carichi, flussi e bilancio per passo;
 - `heads.nc`: carichi in NetCDF UGRID.
 
+`runs` elenca i run del progetto, dal più recente, con stato (completato, non riuscito, costruito, in corso o interrotto, incompleto), durata e l'indicazione dei run costruiti da una versione precedente del progetto:
+
+```powershell
+pixi run phrear runs "C:\...\esempio"
+```
+
 `export` rigenera `heads.nc` per un run qualsiasi, di default l'ultimo completato:
 
 ```powershell

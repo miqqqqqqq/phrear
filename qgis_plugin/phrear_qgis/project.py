@@ -31,6 +31,7 @@ from .dialogs import NewFolderDialog, NewProjectDialog, last_dir, remember_dir
 from .editing import ensure_saved, keep_wall_clock, project_layers
 from .forms import configure
 from .i18n import interface_language, tr
+from .results import SECTION_PROPERTY
 
 if TYPE_CHECKING:
     from .plugin import PhrearPlugin
@@ -209,7 +210,9 @@ class ProjectManager:
         group = tree.insertGroup(0, tr("Phrear – {name}").format(name=info.get("name", root.name)))
         group.setCustomProperty(GROUP_PROPERTY, str(root))
         model_group = group.addGroup(tr("Conceptual model"))
+        model_group.setCustomProperty(SECTION_PROPERTY, "model")
         tables_group = group.addGroup(tr("Tables"))
+        tables_group.setCustomProperty(SECTION_PROPERTY, "tables")
         tables_group.setExpanded(False)
         invalid: list[str] = []
         layers: dict[str, Any] = {}

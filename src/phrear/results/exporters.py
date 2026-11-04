@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from phrear.errors import Localized
-from phrear.results.netcdf import HEADS_NC, write_heads
+from phrear.results.netcdf import HEAD_UPPER_NAME, HEADS_NC, write_heads
 
 Writer = Callable[[Path, dict[str, Any], datetime], Path]
 
@@ -27,6 +27,8 @@ class Exporter:
     filename: str
     """Name of the file written in the run folder."""
     write: Writer = field(repr=False)
+    default_dataset: str = ""
+    """Dataset a viewer shows first, by the name viewers give it (empty: the first)."""
 
 
 #: Registered exporters; ``heads`` is the default of ``phrear export``.
@@ -37,6 +39,7 @@ EXPORTERS: dict[str, Exporter] = {
         "NetCDF UGRID",
         HEADS_NC,
         write_heads,
+        HEAD_UPPER_NAME,
     )
 }
 

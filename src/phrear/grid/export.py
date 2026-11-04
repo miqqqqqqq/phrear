@@ -8,6 +8,7 @@ import geopandas as gpd
 import numpy as np
 import pyogrio
 
+from phrear.errors import ResultsError
 from phrear.grid.model_grid import ModelGrid
 
 
@@ -35,6 +36,9 @@ def export_grid(model_grid: ModelGrid, path: Path, epsg: int) -> int:
     frame = gpd.GeoDataFrame(data, geometry=list(g.cell_polygons().ravel()), crs=f"EPSG:{epsg}")
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
-        path.unlink()
+        try:
+            path.unlink()
+        except PermissionError as exc:  # Windows: the file is open, e.g. as a QGIS layer
+            raise ResultsError("results.file_locked", path=str(path)) from exc
     pyogrio.write_dataframe(frame, path, layer="cells", driver="GPKG")
     return len(frame)

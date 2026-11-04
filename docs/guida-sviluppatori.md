@@ -65,15 +65,15 @@ project.toml + model.gpkg + rasters/
 - **Un comando.** Un `CommandSpec(name, help, configure, handler)` nella lista `COMMANDS` di un modulo di `commands/`, registrato in `commands/__init__.py`. Il handler riceve `Context` e usa `ctx.result`, `ctx.warn` ed eventuali eventi, così funziona sia in testo sia con `--json`.
 - **Un tipo di condizione al contorno.** Un `BoundaryConditionType` con la funzione `build(ctx) -> PackageInput`, aggiunto con `boundaries.registry.register`. Gli errori per feature passano da `ctx.errors.fail(...)`, così `check` li raccoglie tutti. La scrittura del pacchetto MF6 va aggiunta in `modflow/simulation.py`.
 - **Un controllo.** Un `Check` con severità, fasi richieste e funzione `run(ins) -> list[Problem]`, aggiunto con `checks.registry.register`; il codice e i testi vanno nel catalogo.
-- **Un exporter.** Un `Exporter` con la funzione `write(folder, manifest, created) -> Path`, aggiunto con `results.exporters.register`; diventa una scelta di `phrear export --format`.
+- **Un exporter.** Un `Exporter` con la funzione `write(folder, manifest, created) -> Path`, aggiunto con `results.exporters.register`; diventa una scelta di `phrear export --format` e un prodotto in `phrear runs`. `default_dataset` è il nome, come lo mostrano MDAL e QGIS, del dataset che il plugin attiva per primo.
 - **Un caso di verifica.** Un `Case` in `verification/cases.py`, con la costruzione del progetto (via `project.editing`), il confronto con la soluzione analitica e la tolleranza; compare in `verify` e nei test `engine`.
 
 ## Plugin QGIS
 
 Il plugin (`qgis_plugin/phrear_qgis/`, GPL-2.0-or-later) non contiene logica di calcolo: esegue `pixi run … phrear --json` e legge gli eventi (ADR 0018).
 
-- `client/`: logica senza QGIS né Qt (comando, ambiente, eventi, progetti, piano di form, relazioni e stili, problemi e log di controllo ed esecuzione), testata in `tests/plugin/`. Un test verifica che non importi QGIS o Qt.
-- `process.py`, `settings.py`, `plugin.py`, `i18n.py`, `project.py`, `forms.py`, `editing.py`, `panel.py`: parte Qt, da provare in QGIS.
+- `client/`: logica senza QGIS né Qt (comando, ambiente, eventi, progetti, piano di form, relazioni e stili, problemi e log di controllo ed esecuzione, run e layer dei risultati), testata in `tests/plugin/`. Un test verifica che non importi QGIS o Qt.
+- `process.py`, `settings.py`, `plugin.py`, `i18n.py`, `project.py`, `forms.py`, `editing.py`, `panel.py`, `results.py`: parte Qt, da provare in QGIS.
 - Form, liste di valori, relazioni e stili derivano da `phrear schema` (ADR 0020). Per un campo, una relazione o una lista nuova basta lo schema del core: il plugin non va modificato.
 - Ogni testo dell'interfaccia va scritto in inglese dentro `tr("…")` con una stringa letterale. Poi `pixi run plugin-i18n` aggiorna `i18n/phrear_it.ts`, dove si scrive la traduzione, e compila il `.qm`. Serve una volta `pixi install -e i18n`.
 - `pixi run plugin-link` collega il plugin al profilo di QGIS 4; `pixi run plugin-zip` crea il pacchetto in `dist/`.

@@ -9,6 +9,7 @@ import geopandas as gpd
 import pyogrio
 
 from phrear.boundaries.registry import Boundaries
+from phrear.errors import ResultsError
 from phrear.grid.model_grid import ModelGrid
 
 _COLUMNS = (
@@ -52,6 +53,9 @@ def export_boundaries(boundaries: Boundaries, grid: ModelGrid, path: Path, epsg:
     )
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
-        path.unlink()
+        try:
+            path.unlink()
+        except PermissionError as exc:  # Windows: the file is open, e.g. as a QGIS layer
+            raise ResultsError("results.file_locked", path=str(path)) from exc
     pyogrio.write_dataframe(frame, path, layer="cells", driver="GPKG", geometry_type="Polygon")
     return len(frame)

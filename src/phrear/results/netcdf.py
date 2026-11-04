@@ -32,6 +32,8 @@ from phrear.grid.structured import StructuredGeometry
 from phrear.modflow.simulation import HEAD_FILE, MODEL
 
 HEADS_NC: Final = "heads.nc"
+#: Name of ``head_upper`` in viewers: MDAL and QGIS call each variable by its long name.
+HEAD_UPPER_NAME: Final = "Head of the uppermost saturated active cell"
 MESH: Final = "mesh2d"
 CRS_VAR: Final = "projected_coordinate_system"
 _INACTIVE: Final = 1e29
@@ -125,7 +127,7 @@ def heads_dataset(folder: Path, manifest: dict[str, Any], created: datetime) -> 
             (time, face),
             upper,
             _face(
-                "Head of the uppermost saturated active cell",
+                HEAD_UPPER_NAME,
                 "Carico della prima cella attiva satura dall'alto",
                 head=True,
             ),

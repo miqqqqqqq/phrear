@@ -142,6 +142,7 @@ def _run(args: argparse.Namespace, ctx: Context) -> int:
     data["heads"] = str(
         heads.write(run.folder, read_manifest(run.folder), datetime.now().astimezone())
     )
+    data["heads_default"] = heads.default_dataset
     ctx.result("run", data, _run_text(data, ctx.lang))
     return 0
 
