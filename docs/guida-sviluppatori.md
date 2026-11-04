@@ -68,6 +68,15 @@ project.toml + model.gpkg + rasters/
 - **Un exporter.** Un `Exporter` con la funzione `write(folder, manifest, created) -> Path`, aggiunto con `results.exporters.register`; diventa una scelta di `phrear export --format`.
 - **Un caso di verifica.** Un `Case` in `verification/cases.py`, con la costruzione del progetto (via `project.editing`), il confronto con la soluzione analitica e la tolleranza; compare in `verify` e nei test `engine`.
 
+## Plugin QGIS
+
+Il plugin (`qgis_plugin/phrear_qgis/`, GPL-2.0-or-later) non contiene logica di calcolo: esegue `pixi run … phrear --json` e legge gli eventi (ADR 0018).
+
+- `client/`: logica senza QGIS né Qt (comando, ambiente, eventi), testata in `tests/plugin/`. Un test verifica che non importi QGIS o Qt.
+- `process.py`, `settings.py`, `plugin.py`, `i18n.py`: parte Qt, da provare in QGIS.
+- Ogni testo dell'interfaccia va scritto in inglese dentro `tr("…")` con una stringa letterale. Poi `pixi run plugin-i18n` aggiorna `i18n/phrear_it.ts`, dove si scrive la traduzione, e compila il `.qm`. Serve una volta `pixi install -e i18n`.
+- `pixi run plugin-link` collega il plugin al profilo di QGIS 4; `pixi run plugin-zip` crea il pacchetto in `dist/`.
+
 ## Test
 
 - `tests/unit/sites.py` costruisce un sito sintetico (dominio, due unità, superfici) condiviso dalla maggior parte dei test; `tests/unit/conftest.py` aggiunge parametri validi (`valid_site`) e un modello completo (`model_site`).

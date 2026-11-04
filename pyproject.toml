@@ -43,21 +43,26 @@ filterwarnings = ["ignore:numpy.ndarray size changed:RuntimeWarning"]
 [tool.ruff]
 line-length = 100
 target-version = "py312"
-src = ["src", "tests"]
+src = ["src", "tests", "qgis_plugin", "scripts"]
 extend-exclude = [".pixi"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "N", "SIM", "RUF", "PTH"]
+
 # Typographic characters used on purpose in user-facing texts.
 allowed-confusables = ["×", "−", "’", "–"]
+
+[tool.ruff.lint.per-file-ignores]
+# QGIS requires classFactory, initGui and camelCase Qt overrides
+"qgis_plugin/**" = ["N802"]
 
 [tool.mypy]
 python_version = "3.12"
 strict = true
-files = ["src", "tests"]
-mypy_path = "src"
+files = ["src", "tests", "qgis_plugin", "scripts"]
+mypy_path = "src:qgis_plugin:scripts"
 
 # Libraries without type information: their objects are typed as Any.
 [[tool.mypy.overrides]]
-module = ["geopandas.*", "pyogrio.*", "shapely.*", "rasterio.*", "flopy.*", "xugrid.*"]
+module = ["geopandas.*", "pyogrio.*", "shapely.*", "rasterio.*", "flopy.*", "xugrid.*", "qgis.*"]
 ignore_missing_imports = true

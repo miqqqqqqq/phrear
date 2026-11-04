@@ -3,6 +3,7 @@
 from phrear.commands import (
     bc_commands,
     check_commands,
+    env_commands,
     example_commands,
     grid_commands,
     params_commands,
@@ -26,6 +27,7 @@ COMMANDS: list[CommandSpec] = [
     *run_commands.COMMANDS,
     *results_commands.COMMANDS,
     *verify_commands.COMMANDS,
+    *env_commands.COMMANDS,
 ]
 
 __all__ = ["COMMANDS", "CommandSpec", "Configure", "Context", "Handler"]

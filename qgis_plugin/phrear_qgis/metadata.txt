@@ -1,0 +1,20 @@
+[general]
+name=Phrear
+qgisMinimumVersion=4.0
+qgisMaximumVersion=4.99
+description=Groundwater modelling with MODFLOW 6 / Modellazione delle acque sotterranee con MODFLOW 6
+version=0.1.0-dev
+author=Michele
+email=288979892+miqqqqqqq@users.noreply.github.com
+about=Phrear builds and runs MODFLOW 6 groundwater flow models from a conceptual model kept in a GeoPackage: units and contact surfaces, parameters with units and sources, wells, fixed heads along lines and areas, recharge zones, dated time series. The plugin runs the Phrear core (EUPL-1.2) in its own pixi environment and shows the results as QGIS layers. Phrear costruisce ed esegue modelli di flusso MODFLOW 6 da un modello concettuale in GeoPackage.
+tracker=https://github.com/miqqqqqqq/phrear/issues
+repository=https://github.com/miqqqqqqq/phrear
+homepage=https://github.com/miqqqqqqq/phrear
+tags=groundwater,hydrogeology,modflow,mf6,aquifer,wells,acque sotterranee
+category=Plugins
+icon=icons/phrear.svg
+experimental=True
+deprecated=False
+hasProcessingProvider=no
+server=False
+changelog=0.1.0-dev: plugin skeleton, settings, check of the core environment.

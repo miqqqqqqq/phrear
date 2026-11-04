@@ -21,6 +21,7 @@ Ogni decisione presa durante lo sviluppo ha un file numerato in questa cartella 
 | [0015](0015-export-carichi-netcdf-ugrid.md) | Export dei carichi in NetCDF UGRID | accettata | 41 |
 | [0016](0016-verifica-analitica.md) | Verifica con soluzioni analitiche e comando `verify` | accettata | 42 |
 | [0017](0017-esempio-e-chiusura-m1a.md) | Progetto di esempio, registro degli exporter, chiusura di M1a | accettata | 43 |
+| [0018](0018-plugin-qgis-architettura.md) | Plugin QGIS: collegamento al core, processi, traduzioni, pacchetto | accettata | 44 |
 
 ## Modello
 

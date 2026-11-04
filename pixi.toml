@@ -40,8 +40,14 @@ mypy = ">=1.13"
 pre-commit = ">=4.0"
 pandas-stubs = ">=2.2"
 
+# Qt tools (lrelease) to compile the translations of the QGIS plugin; not part of
+# the default environment, so users and CI do not download them.
+[feature.i18n.dependencies]
+qt6-main = ">=6.8"
+
 [environments]
 default = ["dev"]
+i18n = { features = ["i18n"], no-default-feature = true }
 
 [tasks]
 test = "pytest"
@@ -49,3 +55,6 @@ lint = "ruff check . && ruff format --check ."
 format = "ruff format . && ruff check --fix ."
 typecheck = "mypy"
 check = { depends-on = ["lint", "typecheck", "test"] }
+plugin-zip = "python scripts/plugin_package.py zip"
+plugin-link = "python scripts/plugin_package.py link"
+plugin-i18n = "python scripts/plugin_i18n.py"

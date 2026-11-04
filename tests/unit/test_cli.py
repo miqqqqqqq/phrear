@@ -97,3 +97,14 @@ def test_run_command_without_sink_returns_handler_code() -> None:
     json_ctx = Context(sink=sink, lang="it", out=io.StringIO())
     assert cli.run_command("x", handler, argparse.Namespace(), json_ctx) == 7
     assert len(sink.events) == 2
+
+
+def test_env_reports_the_versions() -> None:
+    stdout = io.BytesIO()
+    code = cli.main(["--json", "env"], stdout=stdout)
+    events = [json.loads(line) for line in stdout.getvalue().splitlines()]
+    assert code == 0
+    data = next(e for e in events if e["event"] == "result")["data"]
+    assert data["phrear"] == __version__ and data["event_schema"] == "1"
+    assert data["mf6"]["version"].count(".") == 2
+    assert data["gdal"] and data["proj"]

@@ -167,7 +167,7 @@ QGIS 4 + plugin ──(CLI + eventi JSON)──> core phrear ──> MODFLOW 6 (
                                viewer 3D ────┘ (legge i risultati)
 ```
 
-Comandi CLI minimi: `new`, `example`, `check`, `grid`, `params`, `bc`, `build`, `run`, `results`, `export`, `migrate`, `info`, `schema`, `calendar`, `import`, `scenario`, `verify`. Ogni comando accetta l'opzione `--json` per produrre l'output come eventi. Il comando `verify` esegue i test di verifica sull'installazione dell'utente e produce il report di affidabilità (sezione 20). Codici di uscita: 0 successo, 1 errore nell'input o nel progetto, 2 riga di comando non valida, 3 errore interno (ADR 0006).
+Comandi CLI minimi: `new`, `example`, `env`, `check`, `grid`, `params`, `bc`, `build`, `run`, `results`, `export`, `migrate`, `info`, `schema`, `calendar`, `import`, `scenario`, `verify`. Ogni comando accetta l'opzione `--json` per produrre l'output come eventi. Il comando `verify` esegue i test di verifica sull'installazione dell'utente e produce il report di affidabilità (sezione 20). Codici di uscita: 0 successo, 1 errore nell'input o nel progetto, 2 riga di comando non valida, 3 errore interno (ADR 0006).
 
 ---
 
@@ -220,6 +220,7 @@ phrear/
 │  ├─ errors.py      # gerarchia degli errori con codice e messaggio utente
 │  └─ cli.py
 ├─ qgis_plugin/phrear_qgis/  # plugin QGIS 4: UI, provider Processing, traduzioni, template di layout
+├─ scripts/                   # pacchetto, collegamento di sviluppo e traduzioni del plugin
 ├─ viewer/                    # viewer 3D
 ├─ tests/
 │  ├─ unit/
@@ -858,7 +859,7 @@ Regole:
 
 **Accettazione:** superfici interpolate con incertezza su un caso reale, confrontate con i raster esistenti.
 
-**Stato attuale:** M1a completata il 2026-11-03 in 12 incrementi: scheletro e CI; unità, errori ed eventi; formato del progetto; tempo; griglia e superfici; parametri e carichi iniziali; condizioni al contorno; controlli; build e run; export NetCDF UGRID; verifica analitica; progetto di esempio e guide. Prossima milestone M1b (plugin minimo).
+**Stato attuale:** M1a completata il 2026-11-03 in 12 incrementi: scheletro e CI; unità, errori ed eventi; formato del progetto; tempo; griglia e superfici; parametri e carichi iniziali; condizioni al contorno; controlli; build e run; export NetCDF UGRID; verifica analitica; progetto di esempio e guide. M1b in corso: incremento 1 completato (scheletro del plugin per QGIS 4, impostazioni, verifica dell'ambiente con `phrear env`, traduzioni IT/EN, ZIP e collegamento di sviluppo).
 
 ---
 
@@ -952,3 +953,4 @@ Regole:
 | 41 | 2026-11-03 | Carichi in NetCDF UGRID dalla griglia binaria e dai carichi del run: una faccia per colonna, una variabile per layer, celle asciutte mancanti, carico della prima cella satura, tempo dalla data di inizio, CRS anche negli attributi di MDAL, scrittura atomica (ADR 0015) | Mesh layer di QGIS con dimensione temporale; export coerente con il run anche se il progetto cambia | Variabile unica (tempo, layer, faccia); carichi delle celle asciutte; griglia ricostruita dal progetto |
 | 42 | 2026-11-03 | Casi di verifica costruiti come progetti Phrear completi (catena intera: GeoPackage, controlli, build, run); punti ad almeno 3 celle dal pozzo; errore massimo su s_max per i casi con pozzo, assoluto per il flusso 1D; E₁ propria; comando `verify` con report, grafici e JSON in una cartella nuova (ADR 0016) | Verifica di Phrear, non solo di MF6; prova di affidabilità rigenerabile dall'utente | Modelli FloPy scritti a mano; scipy per E₁; confronto nella cella pozzo |
 | 43 | 2026-11-03 | Progetto di esempio generato dal codice (`phrear example`) con test di regressione sui carichi; registro `Exporter` con `heads` come primo exporter; guide CLI e sviluppatori; M1a chiusa (ADR 0017) | Nessun binario nel repository, esempio sempre allineato allo schema; criteri di accettazione di M1a soddisfatti | Esempio salvato come file; sito reale prima della verifica tra M3 e M4 |
+| 44 | 2026-11-04 | Plugin in `qgis_plugin/phrear_qgis` per QGIS 4.0–4.99; core tramite `pixi run --frozen` nell'ambiente del repository; variabili e PATH di QGIS rimossi per il sottoprocesso; annullamento dell'intero albero dei processi; comando `env`; traduzioni Qt con `lrelease` in un ambiente pixi separato; ZIP e junction di sviluppo; logica senza Qt testata in CI (ADR 0018) | Core isolato dal Python di QGIS; nessun processo orfano; ambiente predefinito leggero | Eseguibile del core senza pixi; dizionario Python per le traduzioni; strumenti Qt nell'ambiente predefinito; QGIS nella CI |

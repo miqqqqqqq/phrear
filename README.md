@@ -4,12 +4,13 @@ Groundwater modelling platform for QGIS built on MODFLOW 6. Successor in spirit 
 
 Piattaforma di modellazione delle acque sotterranee per QGIS basata su MODFLOW 6: prima il flusso, poi calibrazione e trasporto.
 
-**Status:** pre-alpha. Milestone M1a (core, CLI, numerical verification) is complete; next is M1b, the minimal QGIS plugin. The project specification is [docs/SPEC.md](docs/SPEC.md) (Italian).
+**Status:** pre-alpha. Milestone M1a (core, CLI, numerical verification) is complete; M1b, the minimal QGIS plugin, is in progress. The project specification is [docs/SPEC.md](docs/SPEC.md) (Italian).
 
 Documentation (Italian):
 
 - [Guida rapida da riga di comando](docs/guida-rapida-cli.md)
 - [Guida per gli sviluppatori](docs/guida-sviluppatori.md)
+- [Plugin per QGIS 4](docs/guida-plugin.md)
 - [Report di verifica](docs/verification/report.md): Thiem, Theis, Dupuit, flusso 1D
 - [Decisioni architetturali](docs/adr/README.md)
 
