@@ -81,8 +81,10 @@ class PhrearPlugin:
         self._action(tr("Check the Phrear environment"), self.check_environment, icon)
         self._action(tr("Phrear settings…"), self.show_settings)
         self._action(tr("About Phrear"), self.show_about)
+        self.projects.watch()
 
     def unload(self) -> None:
+        self.projects.unwatch()
         for process in list(self.processes):
             process.cancel()
         for action in self.actions:

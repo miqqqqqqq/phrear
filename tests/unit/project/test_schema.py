@@ -73,3 +73,59 @@ def test_schema_document_is_json_serialisable() -> None:
     text = json.dumps(document, ensure_ascii=False)
     assert '"wells"' in text
     assert document["schema_version"] == 1
+
+
+def test_relations_and_lookups_point_to_existing_fields() -> None:
+    from phrear.project.schema import RELATIONS, TABLES, TABLES_BY_NAME
+
+    def has(table: str, field: str) -> bool:
+        return field == "fid" or field in TABLES_BY_NAME[table].field_names
+
+    for r in RELATIONS:
+        assert has(r.child, r.child_field), r.name
+        for parent in (r.parent, *r.parents):
+            if parent is not None:
+                assert has(parent, r.parent_field), (r.name, parent)
+        assert (r.parent is None) == bool(r.parents), r.name
+        if r.parent_table_field is not None:
+            choices = TABLES_BY_NAME[r.child].field(r.parent_table_field).choice_values
+            assert set(r.parents) <= set(choices), r.name
+        for field, value in r.child_filter:
+            assert value in TABLES_BY_NAME[r.child].field(field).choice_values
+    for table in TABLES:
+        for f in table.fields:
+            if f.lookup is not None:
+                assert has(f.lookup.table, f.lookup.key), (table.name, f.name)
+                assert has(f.lookup.table, f.lookup.value or f.lookup.key), (table.name, f.name)
+                for field, value in f.lookup.filter:
+                    assert value in TABLES_BY_NAME[f.lookup.table].field(field).choice_values
+
+
+def test_every_layer_has_a_style() -> None:
+    from phrear.project.schema import TABLES
+
+    kinds = {"Point": "marker", "MultiLineString": "line", "MultiPolygon": "fill"}
+    for table in TABLES:
+        if table.geometry is not None:
+            assert table.style is not None and table.style.kind == kinds[table.geometry], table.name
+
+
+def test_schema_document_has_relations_lookups_and_styles() -> None:
+    from phrear.project.schema import schema_document
+
+    doc = schema_document()
+    assert [r["name"] for r in doc["relations"]] == [
+        "unit_parameters", "series_values", "feature_stations"
+    ]  # fmt: skip
+    wells = next(t for t in doc["tables"] if t["name"] == "wells")
+    series = next(f for f in wells["fields"] if f["name"] == "series_id")
+    assert series["lookup"] == {
+        "table": "timeseries_meta",
+        "key": "series_id",
+        "value": "series_id",
+        "filter": {"quantity": "discharge"},
+    }
+    lines = next(t for t in doc["tables"] if t["name"] == "fixed_head_lines")
+    top = next(f for f in lines["fields"] if f["name"] == "top_unit")
+    assert top["lookup"]["key"] == "position" and top["lookup"]["value"] == "name"
+    assert wells["style"]["kind"] == "marker" and wells["style"]["color"].startswith("#")

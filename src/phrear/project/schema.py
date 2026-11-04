@@ -52,6 +52,52 @@ _NO_TEXT: Final = Localized("", "")
 
 
 @dataclass(frozen=True)
+class Lookup:
+    """Values of a field taken from another table, optionally filtered (a value list in forms)."""
+
+    table: str
+    key: str
+    filter: tuple[tuple[str, str], ...] = ()
+    """(field, value) pairs the rows of ``table`` must match."""
+    value: str | None = None
+    """Field shown to the user instead of the key; ``None`` shows the key."""
+
+
+@dataclass(frozen=True)
+class Relation:
+    """Child rows that refer to a parent row, shown inside the parent form.
+
+    For a polymorphic relation ``parents`` lists the possible parent tables and
+    ``parent_table_field`` is the child field that holds the name of the parent table.
+    """
+
+    name: str
+    label: Localized
+    child: str
+    child_field: str
+    parent_field: str
+    parent: str | None = None
+    parents: tuple[str, ...] = ()
+    parent_table_field: str | None = None
+    child_filter: tuple[tuple[str, str], ...] = ()
+    """Values the child rows of this relation have (set as defaults in new child rows)."""
+
+
+@dataclass(frozen=True)
+class LayerStyle:
+    """Look of a layer, shared by the plugin, the reports and the viewer (section 18)."""
+
+    kind: str
+    """``marker``, ``line`` or ``fill``."""
+    color: str
+    outline: str | None = None
+    size_mm: float | None = None
+    width_mm: float | None = None
+    shape: str | None = None
+    fill_opacity: float | None = None
+
+
+@dataclass(frozen=True)
 class FieldDef:
     """A column of a table, with everything a form needs to present it."""
 
@@ -70,6 +116,7 @@ class FieldDef:
     maximum: float | None = None
     system: bool = False
     """Maintained by the software (timestamps); read-only in forms, not hashed."""
+    lookup: Lookup | None = None
 
     @property
     def choice_values(self) -> tuple[str, ...]:
@@ -87,6 +134,7 @@ class TableDef:
     fields: tuple[FieldDef, ...]
     unique: tuple[tuple[str, ...], ...] = ()
     milestone: str = "M1a"
+    style: LayerStyle | None = None
 
     @property
     def is_layer(self) -> bool:
@@ -132,6 +180,7 @@ COMMON_FEATURE_FIELDS: tuple[FieldDef, ...] = (
             "Vuoto per il modello base; altrimenti l'oggetto esiste solo nello scenario.",
             "Empty for the base model; otherwise the object exists only in that scenario.",
         ),
+        lookup=Lookup("scenarios", "scenario_id"),
     ),
 )
 
@@ -147,6 +196,7 @@ _UNIT_RANGE = (
             "Position of the first hydrostratigraphic unit affected; empty = all.",
         ),
         minimum=1,
+        lookup=Lookup("hydro_units", "position", value="name"),
     ),
     FieldDef(
         "bottom_unit",
@@ -157,6 +207,7 @@ _UNIT_RANGE = (
             "Position of the last unit affected; empty = down to the last one.",
         ),
         minimum=1,
+        lookup=Lookup("hydro_units", "position", value="name"),
     ),
 )
 
@@ -189,6 +240,7 @@ TABLES: tuple[TableDef, ...] = (
             "Active outline of the model. Cells outside the domain are inactive.",
         ),
         COMMON_FEATURE_FIELDS,
+        style=LayerStyle("fill", "#52514e", fill_opacity=0.0, width_mm=0.6),
     ),
     TableDef(
         "hydro_units",
@@ -313,6 +365,7 @@ TABLES: tuple[TableDef, ...] = (
                 FieldType.TEXT,
                 L("Tipo di oggetto", "Object type"),
                 required=True,
+                default="unit",
                 choices=(_c("unit", "Unità", "Unit"), _c("zone", "Zona", "Zone")),
             ),
             FieldDef(
@@ -492,8 +545,10 @@ TABLES: tuple[TableDef, ...] = (
                     "Se presente, sostituisce la portata costante.",
                     "If set, it replaces the constant rate.",
                 ),
+                lookup=Lookup("timeseries_meta", "series_id", (("quantity", "discharge"),)),
             ),
         ),
+        style=LayerStyle("marker", "#2a78d6", outline="#fcfcfb", size_mm=3.2, shape="circle"),
     ),
     TableDef(
         "fixed_head_lines",
@@ -504,6 +559,7 @@ TABLES: tuple[TableDef, ...] = (
             "Fixed head (CHD) along a line. Values are given at stations.",
         ),
         (*COMMON_FEATURE_FIELDS, *_UNIT_RANGE),
+        style=LayerStyle("line", "#1b4f8f", width_mm=0.9),
     ),
     TableDef(
         "fixed_head_areas",
@@ -514,6 +570,7 @@ TABLES: tuple[TableDef, ...] = (
             "Fixed head (CHD) over an area, for example a lake. The value is given at a station.",
         ),
         (*COMMON_FEATURE_FIELDS, *_UNIT_RANGE),
+        style=LayerStyle("fill", "#2a78d6", outline="#1b4f8f", fill_opacity=0.25, width_mm=0.4),
     ),
     TableDef(
         "line_stations",
@@ -572,8 +629,10 @@ TABLES: tuple[TableDef, ...] = (
                     "Se presente, sostituisce il valore costante.",
                     "If set, it replaces the constant value.",
                 ),
+                lookup=Lookup("timeseries_meta", "series_id", (("quantity", "length"),)),
             ),
         ),
+        style=LayerStyle("marker", "#eb6834", outline="#fcfcfb", size_mm=2.8, shape="triangle"),
     ),
     TableDef(
         "recharge_zones",
@@ -601,8 +660,10 @@ TABLES: tuple[TableDef, ...] = (
                     "Se presente, sostituisce il valore costante.",
                     "If set, it replaces the constant value.",
                 ),
+                lookup=Lookup("timeseries_meta", "series_id", (("quantity", "velocity"),)),
             ),
         ),
+        style=LayerStyle("fill", "#1baf7a", outline="#1baf7a", fill_opacity=0.15, width_mm=0.4),
     ),
     TableDef(
         "timeseries_meta",
@@ -654,7 +715,13 @@ TABLES: tuple[TableDef, ...] = (
             "Date-value pairs, in the unit of the series.",
         ),
         (
-            FieldDef("series_id", FieldType.TEXT, L("Serie", "Series"), required=True),
+            FieldDef(
+                "series_id",
+                FieldType.TEXT,
+                L("Serie", "Series"),
+                required=True,
+                lookup=Lookup("timeseries_meta", "series_id"),
+            ),
             FieldDef(
                 "datetime",
                 FieldType.DATETIME,
@@ -687,7 +754,13 @@ TABLES: tuple[TableDef, ...] = (
             "Base-model features disabled or modified by a scenario.",
         ),
         (
-            FieldDef("scenario_id", FieldType.TEXT, L("Scenario", "Scenario"), required=True),
+            FieldDef(
+                "scenario_id",
+                FieldType.TEXT,
+                L("Scenario", "Scenario"),
+                required=True,
+                lookup=Lookup("scenarios", "scenario_id"),
+            ),
             FieldDef("target_layer", FieldType.TEXT, L("Layer", "Layer"), required=True),
             FieldDef("target_fid", FieldType.INTEGER, L("Feature", "Feature"), required=True),
             FieldDef(
@@ -731,6 +804,36 @@ TABLES: tuple[TableDef, ...] = (
 
 TABLES_BY_NAME: dict[str, TableDef] = {t.name: t for t in TABLES}
 
+#: Child rows shown in the form of their parent.
+RELATIONS: tuple[Relation, ...] = (
+    Relation(
+        "unit_parameters",
+        L("Parametri dell'unità", "Unit parameters"),
+        child="param_values",
+        child_field="object_id",
+        parent="hydro_units",
+        parent_field="fid",
+        child_filter=(("object_type", "unit"),),
+    ),
+    Relation(
+        "series_values",
+        L("Valori della serie", "Series values"),
+        child="timeseries_values",
+        child_field="series_id",
+        parent="timeseries_meta",
+        parent_field="series_id",
+    ),
+    Relation(
+        "feature_stations",
+        L("Stazioni", "Stations"),
+        child="line_stations",
+        child_field="feature_id",
+        parents=("fixed_head_lines", "fixed_head_areas"),
+        parent_table_field="feature_layer",
+        parent_field="fid",
+    ),
+)
+
 
 def _localized(value: Localized) -> dict[str, str]:
     return {"it": value.it, "en": value.en}
@@ -756,7 +859,34 @@ def _field_document(f: FieldDef) -> dict[str, Any]:
         doc["minimum"] = f.minimum
     if f.maximum is not None:
         doc["maximum"] = f.maximum
+    if f.lookup is not None:
+        doc["lookup"] = {
+            "table": f.lookup.table,
+            "key": f.lookup.key,
+            "value": f.lookup.value or f.lookup.key,
+            "filter": dict(f.lookup.filter),
+        }
     return doc
+
+
+def _style_document(style: LayerStyle | None) -> dict[str, Any] | None:
+    if style is None:
+        return None
+    return {k: v for k, v in style.__dict__.items() if v is not None}
+
+
+def _relation_document(r: Relation) -> dict[str, Any]:
+    return {
+        "name": r.name,
+        "label": _localized(r.label),
+        "child": r.child,
+        "child_field": r.child_field,
+        "parent": r.parent,
+        "parents": list(r.parents),
+        "parent_table_field": r.parent_table_field,
+        "parent_field": r.parent_field,
+        "child_filter": dict(r.child_filter),
+    }
 
 
 def schema_document() -> dict[str, Any]:
@@ -771,9 +901,11 @@ def schema_document() -> dict[str, Any]:
                 "help": _localized(t.help),
                 "unique": [list(u) for u in t.unique],
                 "fields": [_field_document(f) for f in t.fields],
+                "style": _style_document(t.style),
             }
             for t in TABLES
         ],
+        "relations": [_relation_document(r) for r in RELATIONS],
         "param_quantities": {k: v.value for k, v in PARAM_QUANTITIES.items()},
         "series_quantities": {k: v.value for k, v in SERIES_QUANTITIES.items()},
     }
@@ -781,6 +913,7 @@ def schema_document() -> dict[str, Any]:
 
 __all__ = [
     "PARAM_QUANTITIES",
+    "RELATIONS",
     "SCHEMA_VERSION",
     "SERIES_QUANTITIES",
     "TABLES",
@@ -789,6 +922,9 @@ __all__ = [
     "FieldDef",
     "FieldType",
     "GeometryType",
+    "LayerStyle",
+    "Lookup",
+    "Relation",
     "TableDef",
     "schema_document",
 ]

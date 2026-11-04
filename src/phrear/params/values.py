@@ -252,7 +252,7 @@ def load_parameters(project: Project, errors: ErrorCollector | None = None) -> P
     by_unit: dict[int, list[_Row]] = {}
     for *row, object_type in rows:
         fid, object_id = row[0], row[1]
-        if object_type != "unit":
+        if (object_type or "unit") != "unit":  # empty means the schema default
             errors.fail(
                 ParameterError(
                     "params.source_not_available",

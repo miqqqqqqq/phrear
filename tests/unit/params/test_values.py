@@ -204,3 +204,9 @@ def test_outside_declared_range_is_a_warning(valid_site: Project) -> None:
     assert _codes(valid_site) == ["params.outside_declared_range"]
     _replace(valid_site, 2, "kh", min=10.0, max=60.0)
     assert _codes(valid_site) == []
+
+
+def test_empty_object_type_means_unit(valid_site: Project) -> None:
+    with gpkg.connect(valid_site.gpkg_path) as conn:
+        conn.execute('UPDATE "param_values" SET object_type = NULL')
+    assert len(load_parameters(valid_site).units) == 2

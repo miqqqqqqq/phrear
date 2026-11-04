@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import os
 from collections.abc import Callable
 from datetime import date
@@ -20,7 +21,8 @@ from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox
 from .client.events import Outcome
 from .client.project import GPKG_FILE, is_project, layer_plan, new_project_args, table_rows
 from .dialogs import NewFolderDialog, NewProjectDialog, last_dir, remember_dir
-from .editing import ensure_saved
+from .editing import ensure_saved, keep_wall_clock
+from .forms import configure
 from .i18n import interface_language, tr
 
 if TYPE_CHECKING:
@@ -43,6 +45,23 @@ class ProjectManager:
     @property
     def window(self) -> Any:
         return self.plugin.iface.mainWindow()
+
+    # --- layers of the projects -----------------------------------------------------
+
+    def watch(self) -> None:
+        """Protect the dates of the project layers, now and whenever they are added."""
+        project = QgsProject.instance()
+        self._layers_added(list(project.mapLayers().values()))
+        project.layersAdded.connect(self._layers_added)
+
+    def unwatch(self) -> None:
+        with contextlib.suppress(TypeError, RuntimeError):
+            QgsProject.instance().layersAdded.disconnect(self._layers_added)
+
+    def _layers_added(self, layers: list[Any]) -> None:
+        for layer in layers:
+            if layer.customProperty(TABLE_PROPERTY):
+                keep_wall_clock(layer)
 
     # --- current project ------------------------------------------------------------
 
@@ -173,8 +192,9 @@ class ProjectManager:
         tables_group = group.addGroup(tr("Tables"))
         tables_group.setExpanded(False)
         invalid: list[str] = []
-        domain = None
-        for spec in layer_plan(schema, interface_language()):
+        layers: dict[str, Any] = {}
+        lang = interface_language()
+        for spec in layer_plan(schema, lang):
             layer = QgsVectorLayer(spec.uri(gpkg), spec.label, "ogr")
             if not layer.isValid():
                 invalid.append(spec.name)
@@ -182,14 +202,17 @@ class ProjectManager:
             layer.setCustomProperty(TABLE_PROPERTY, spec.name)
             project.addMapLayer(layer, False)
             (tables_group if spec.is_table else model_group).addLayer(layer)
-            if spec.name == "domain":
-                domain = layer
+            layers[spec.name] = layer
+        invalid += configure(layers, schema, lang, str(root))
         project.writeEntry(SCOPE, KEY, str(root))
+        domain = layers.get("domain")
         if domain is not None and domain.featureCount() > 0:
             self._zoom_to(domain)
         if invalid:
             self.plugin.message(
-                tr("Some tables could not be loaded: {tables}").format(tables=", ".join(invalid)),
+                tr("Some tables or relations could not be loaded: {names}").format(
+                    names=", ".join(invalid)
+                ),
                 Qgis.MessageLevel.Warning,
             )
         else:

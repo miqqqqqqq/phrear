@@ -3,11 +3,8 @@
 from __future__ import annotations
 
 import io
-import json
 from datetime import date
 from pathlib import Path
-
-import pytest
 
 from phrear import cli
 from phrear_qgis.client.project import (
@@ -21,15 +18,6 @@ from phrear_qgis.client.project import (
     slug,
     table_rows,
 )
-
-
-@pytest.fixture(scope="module")
-def schema() -> dict[str, object]:
-    stdout = io.BytesIO()
-    assert cli.main(["--json", "schema"], stdout=stdout) == 0
-    events = [json.loads(line) for line in stdout.getvalue().splitlines()]
-    data: dict[str, object] = next(e for e in events if e["event"] == "result")["data"]
-    return data
 
 
 def test_slug() -> None:

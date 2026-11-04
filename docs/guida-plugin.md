@@ -64,7 +64,42 @@ I layer si modificano con gli strumenti standard di QGIS. Prima di ogni comando 
 
 Mentre un comando è in corso, la barra dei messaggi mostra «… in corso» con una barra di avanzamento e il pulsante **Annulla**.
 
-## 5. Problemi frequenti
+## 5. Form, relazioni e stili
+
+All'apertura il plugin configura ogni layer secondo lo schema del core. Tutto viene salvato nel progetto QGIS.
+
+**Campi.**
+
+- Etichette con l'unità, per esempio «Inizio filtro [m]».
+- Scelte ammesse in un elenco: ruolo del pozzo, riferimento dei filtri, tipo di interpolazione.
+- Serie temporali in un elenco limitato alla grandezza giusta: portate per i pozzi, livelli per le stazioni, velocità per la ricarica.
+- Unità superiore e inferiore dei carichi imposti scelte per nome.
+- Caselle per i valori sì/no, calendario per le date.
+- `fid` e i campi di sistema (creato il, modificato il) in sola lettura.
+- Il riquadro **Guida**, chiuso, in fondo al form, descrive la tabella e i campi.
+
+**Vincoli e default.**
+
+- Un campo obbligatorio vuoto, o un codice di serie o di scenario già usato, impedisce di salvare la feature.
+- Un valore fuori intervallo, per esempio un raggio negativo, dà solo un avviso nel form.
+- `check` ricontrolla tutto prima del calcolo.
+- I campi nuovi partono dai default dello schema: pozzo in estrazione, filtri in profondità, portata in l/s, oggetto attivo.
+
+**Relazioni.**
+
+| Form | Mostra |
+|---|---|
+| Unità idrostratigrafica | i suoi parametri (K, Ss, Sy, …) |
+| Serie temporale | le coppie data–valore |
+| Linea o area a carico imposto | le sue stazioni |
+
+Dal form del padre si aggiungono i figli già collegati: un parametro aggiunto dal form di un'unità riceve da solo l'unità e il tipo di oggetto. Eliminare un'unità, una serie o una linea elimina anche i figli, dopo la conferma di QGIS.
+
+**Date.** Date e ore sono l'ora civile del modello, senza fuso. Il plugin le salva in modo che l'ora resti quella inserita, anche con il calcolatore di campi; nel GeoPackage possono comparire con lo scarto di fuso (`2024-07-15T00:00:00+02:00`), che il core ignora.
+
+**Stili.** Pozzi blu, stazioni arancioni, linee a carico imposto blu scuro, aree a carico imposto e zone di ricarica con riempimento trasparente, dominio con il solo contorno.
+
+## 6. Problemi frequenti
 
 | Messaggio | Causa e rimedio |
 |---|---|
@@ -72,5 +107,6 @@ Mentre un comando è in corso, la barra dei messaggi mostra «… in corso» con
 | La cartella del core deve essere il repository di phrear | la cartella indicata non contiene `pixi.toml` e `src\phrear` |
 | Impossibile avviare il core | il percorso di pixi non è valido o pixi non si avvia; prova `pixi run phrear env` da PowerShell nella cartella del repository |
 | Il core usa un'altra versione del protocollo degli eventi | plugin e core vengono da versioni diverse del repository; aggiorna entrambi con `git pull` |
+| «unable to open database file» nei messaggi di log dopo un salvataggio, zoom al layer senza effetto | problema noto dell'estensione dei layer (ADR 0020); non tocca i dati. Salva, chiudi e riapri il progetto QGIS |
 
-Form, controllo, esecuzione e risultati arrivano con i prossimi incrementi di M1b.
+Controllo, esecuzione e risultati arrivano con i prossimi incrementi di M1b.
