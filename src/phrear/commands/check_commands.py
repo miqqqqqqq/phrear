@@ -76,6 +76,7 @@ def _data(ins: Inspection) -> dict[str, Any]:
         "stages": [
             {
                 "stage": s.stage,
+                "label": {"it": STAGES[s.stage].it, "en": STAGES[s.stage].en},
                 "status": s.status,
                 "errors": len(s.errors),
                 "warnings": len(s.warnings),

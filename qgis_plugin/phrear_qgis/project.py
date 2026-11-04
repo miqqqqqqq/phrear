@@ -19,9 +19,16 @@ from qgis.core import (
 from qgis.PyQt.QtWidgets import QFileDialog, QMessageBox
 
 from .client.events import Outcome
-from .client.project import GPKG_FILE, is_project, layer_plan, new_project_args, table_rows
+from .client.project import (
+    GPKG_FILE,
+    is_project,
+    layer_plan,
+    new_project_args,
+    table_rows,
+    upgraded_uri,
+)
 from .dialogs import NewFolderDialog, NewProjectDialog, last_dir, remember_dir
-from .editing import ensure_saved, keep_wall_clock
+from .editing import ensure_saved, keep_wall_clock, project_layers
 from .forms import configure
 from .i18n import interface_language, tr
 
@@ -61,7 +68,20 @@ class ProjectManager:
     def _layers_added(self, layers: list[Any]) -> None:
         for layer in layers:
             if layer.customProperty(TABLE_PROPERTY):
+                source = upgraded_uri(layer.source())
+                if source is not None:
+                    layer.setDataSource(source, layer.name(), layer.providerType())
                 keep_wall_clock(layer)
+
+    def layer_for(self, table: str) -> Any:
+        """The layer of ``table`` of the open Phrear project, if it is loaded."""
+        root = self.current()
+        if root is None:
+            return None
+        for layer in project_layers(root / GPKG_FILE):
+            if layer.customProperty(TABLE_PROPERTY) == table:
+                return layer
+        return None
 
     # --- current project ------------------------------------------------------------
 
@@ -205,6 +225,7 @@ class ProjectManager:
             layers[spec.name] = layer
         invalid += configure(layers, schema, lang, str(root))
         project.writeEntry(SCOPE, KEY, str(root))
+        self.plugin.project_changed()
         domain = layers.get("domain")
         if domain is not None and domain.featureCount() > 0:
             self._zoom_to(domain)

@@ -24,6 +24,7 @@ Ogni decisione presa durante lo sviluppo ha un file numerato in questa cartella 
 | [0018](0018-plugin-qgis-architettura.md) | Plugin QGIS: collegamento al core, processi, traduzioni, pacchetto | accettata | 44 |
 | [0019](0019-plugin-progetti.md) | Plugin QGIS: progetti, layer e modifiche in sospeso | accettata | 45 |
 | [0020](0020-plugin-form-relazioni-stili.md) | Plugin QGIS: form, relazioni e stili dallo schema | accettata | 46 |
+| [0021](0021-plugin-pannello-controllo-esecuzione.md) | Plugin QGIS: pannello di controllo ed esecuzione | accettata | 47 |
 
 ## Modello
 

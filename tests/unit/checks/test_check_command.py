@@ -60,4 +60,8 @@ def test_check_json(model_site: Project) -> None:
     data = events[3]["data"]
     assert (data["errors"], data["warnings"]) == (1, 1)
     assert [s["status"] for s in data["stages"]] == ["ok", "ok", "ok", "ok", "errors", "ok"]
+    assert data["stages"][4]["label"] == {
+        "it": "Condizioni al contorno",
+        "en": "Boundary conditions",
+    }
     assert events[4]["error"]["code"] == "check.failed"

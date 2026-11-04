@@ -72,8 +72,8 @@ project.toml + model.gpkg + rasters/
 
 Il plugin (`qgis_plugin/phrear_qgis/`, GPL-2.0-or-later) non contiene logica di calcolo: esegue `pixi run … phrear --json` e legge gli eventi (ADR 0018).
 
-- `client/`: logica senza QGIS né Qt (comando, ambiente, eventi, progetti, piano di form, relazioni e stili), testata in `tests/plugin/`. Un test verifica che non importi QGIS o Qt.
-- `process.py`, `settings.py`, `plugin.py`, `i18n.py`, `project.py`, `forms.py`, `editing.py`: parte Qt, da provare in QGIS.
+- `client/`: logica senza QGIS né Qt (comando, ambiente, eventi, progetti, piano di form, relazioni e stili, problemi e log di controllo ed esecuzione), testata in `tests/plugin/`. Un test verifica che non importi QGIS o Qt.
+- `process.py`, `settings.py`, `plugin.py`, `i18n.py`, `project.py`, `forms.py`, `editing.py`, `panel.py`: parte Qt, da provare in QGIS.
 - Form, liste di valori, relazioni e stili derivano da `phrear schema` (ADR 0020). Per un campo, una relazione o una lista nuova basta lo schema del core: il plugin non va modificato.
 - Ogni testo dell'interfaccia va scritto in inglese dentro `tr("…")` con una stringa letterale. Poi `pixi run plugin-i18n` aggiorna `i18n/phrear_it.ts`, dove si scrive la traduzione, e compila il `.qm`. Serve una volta `pixi install -e i18n`.
 - `pixi run plugin-link` collega il plugin al profilo di QGIS 4; `pixi run plugin-zip` crea il pacchetto in `dist/`.

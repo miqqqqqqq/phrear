@@ -8,13 +8,14 @@ from pathlib import Path
 from typing import Any
 
 from qgis.core import Qgis, QgsApplication, QgsMessageLog
-from qgis.PyQt.QtCore import QCoreApplication
+from qgis.PyQt.QtCore import QCoreApplication, Qt
 from qgis.PyQt.QtGui import QAction, QIcon
 from qgis.PyQt.QtWidgets import QMessageBox, QProgressBar, QPushButton
 
 from .client.command import CoreLocation, location_problems
 from .client.events import Outcome
 from .i18n import install_translator, interface_language, tr
+from .panel import PhrearPanel
 from .process import CoreProcess
 from .project import ProjectManager
 from .settings import SettingsDialog, current_location, problem_text
@@ -61,6 +62,7 @@ class PhrearPlugin:
         self.translator: Any = None
         self.processes: set[CoreProcess] = set()
         self.projects = ProjectManager(self)
+        self.panel: PhrearPanel | None = None
 
     # --- QGIS plugin interface ------------------------------------------------------
 
@@ -77,6 +79,15 @@ class PhrearPlugin:
         self._action(tr("Create the example project…"), self.projects.example_dialog)
         self._action(tr("Project summary"), self.projects.summary)
         self._separator()
+        self.panel = PhrearPanel(self)
+        self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.panel)
+        self.panel.hide()
+        toggle = self.panel.toggleViewAction()
+        toggle.setText(tr("Phrear panel"))
+        toggle.setIcon(QgsApplication.getThemeIcon("/mActionShowAllLayers.svg"))
+        self.iface.addPluginToMenu(self.menu, toggle)
+        self.toolbar.addAction(toggle)
+        self.panel_action = toggle
         icon = QIcon(str(self.plugin_dir / "icons" / "phrear.svg"))
         self._action(tr("Check the Phrear environment"), self.check_environment, icon)
         self._action(tr("Phrear settings…"), self.show_settings)
@@ -87,6 +98,14 @@ class PhrearPlugin:
         self.projects.unwatch()
         for process in list(self.processes):
             process.cancel()
+        if self.panel is not None:
+            self.iface.removePluginMenu(self.menu, self.panel_action)
+            if self.toolbar is not None:
+                self.toolbar.removeAction(self.panel_action)
+            self.panel.disconnect_project()
+            self.iface.removeDockWidget(self.panel)
+            self.panel.deleteLater()
+            self.panel = None
         for action in self.actions:
             self.iface.removePluginMenu(self.menu, action)
             if self.toolbar is not None:
@@ -138,16 +157,20 @@ class PhrearPlugin:
         args: Sequence[str],
         on_finished: Callable[[Outcome], None],
         location: CoreLocation | None = None,
+        *,
+        indicator: bool = True,
     ) -> CoreProcess | None:
+        """Start a command of the core; ``indicator`` shows it in the message bar."""
         location = location or self.location()
         if location is None:
             return None
         process = CoreProcess(location, args, interface_language(), self.iface.mainWindow())
-        indicator = self._indicator(process)
+        item = self._indicator(process) if indicator else None
 
         def finished(outcome: Outcome) -> None:
             self.processes.discard(process)
-            self._close_indicator(indicator)
+            if item is not None:
+                self._close_indicator(item)
             self._log_outcome(outcome)
             on_finished(outcome)
             process.deleteLater()
@@ -185,6 +208,13 @@ class PhrearPlugin:
     def _close_indicator(self, item: Any) -> None:
         with contextlib.suppress(RuntimeError):  # already closed by the user
             self.iface.messageBar().popWidget(item)
+
+    def project_changed(self) -> None:
+        """A Phrear project was opened: show it in the panel."""
+        if self.panel is not None:
+            self.panel.refresh()
+            self.panel.show()
+            self.panel.raise_()
 
     def message(self, text: str, level: Any = None, duration: int = 6) -> None:
         self.iface.messageBar().pushMessage(

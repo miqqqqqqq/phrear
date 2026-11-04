@@ -17,6 +17,7 @@ from phrear_qgis.client.project import (
     new_project_problems,
     slug,
     table_rows,
+    upgraded_uri,
 )
 
 
@@ -76,8 +77,19 @@ def test_layer_plan_follows_the_schema(schema: dict[str, object]) -> None:
     assert (
         LayerSpec("wells", "Pozzi", "Point")
         .uri(Path("C:/p/model.gpkg"))
-        .endswith("model.gpkg|layername=wells")
+        .endswith("model.gpkg|layername=wells|option:NOLOCK=NO")
     )
+
+
+def test_layer_sources_saved_without_the_option_are_upgraded() -> None:
+    assert upgraded_uri("C:/p/model.gpkg|layername=wells") == (
+        "C:/p/model.gpkg|layername=wells|option:NOLOCK=NO"
+    )
+    assert upgraded_uri("C:/p/model.gpkg|layername=wells|option:NOLOCK=YES") == (
+        "C:/p/model.gpkg|layername=wells|option:NOLOCK=NO"
+    )
+    assert upgraded_uri("C:/p/model.gpkg|layername=wells|option:NOLOCK=NO") is None
+    assert upgraded_uri("C:/p/heads.nc") is None
 
 
 def test_table_rows(schema: dict[str, object]) -> None:

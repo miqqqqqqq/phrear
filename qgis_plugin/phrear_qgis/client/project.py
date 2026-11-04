@@ -91,7 +91,27 @@ class LayerSpec:
         return self.geometry is None
 
     def uri(self, gpkg: Path) -> str:
-        return f"{gpkg}|layername={self.name}"
+        return layer_uri(gpkg, self.name)
+
+
+#: Open option of every project layer. QGIS opens read-only GeoPackage layers in
+#: SQLite "nolock" mode, which stops working once an edit session switches the
+#: file to WAL journaling: after a save, the other layers of the same GeoPackage
+#: can no longer compute their extent ("unable to open database file").
+LAYER_OPTION = "option:NOLOCK=NO"
+
+
+def layer_uri(gpkg: Path | str, table: str) -> str:
+    return f"{gpkg}|layername={table}|{LAYER_OPTION}"
+
+
+def upgraded_uri(source: str) -> str | None:
+    """The source of a layer saved before :data:`LAYER_OPTION`, or None if up to date."""
+    parts = source.split("|")
+    if LAYER_OPTION in parts or not any(p.startswith("layername=") for p in parts):
+        return None
+    parts = [p for p in parts if not p.upper().startswith("OPTION:NOLOCK=")]
+    return "|".join([*parts, LAYER_OPTION])
 
 
 def _label(entry: dict[str, Any], lang: str) -> str:

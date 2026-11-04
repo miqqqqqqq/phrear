@@ -99,7 +99,28 @@ Dal form del padre si aggiungono i figli già collegati: un parametro aggiunto d
 
 **Stili.** Pozzi blu, stazioni arancioni, linee a carico imposto blu scuro, aree a carico imposto e zone di ricarica con riempimento trasparente, dominio con il solo contorno.
 
-## 6. Problemi frequenti
+## 6. Controllo ed esecuzione
+
+Il **pannello Phrear** si apre da solo con il progetto, oppure da Plugin → Phrear → **Pannello Phrear** o dal pulsante della barra. Si aggancia a destra della mappa e si sposta come gli altri pannelli di QGIS.
+
+- **Controlla** esegue `phrear check`: tempo, griglia, parametri, carichi iniziali, condizioni al contorno e controlli del modello. Il pannello mostra l'esito di ogni fase; una fase che dipende da un'altra con errori risulta «non controllata».
+- **Esegui** esegue `phrear run`: ripete il controllo e, senza errori, scrive i file di MODFLOW 6, esegue il modello e scrive i carichi in `runs/<nome>/heads.nc`. Il nome del run è facoltativo; vuoto vale data e ora. Sono ammessi lettere, cifre, `_` e `-`, fino a 40 caratteri, e un run esistente non viene mai sovrascritto.
+- **Annulla** interrompe il comando, MODFLOW compreso.
+
+Prima di ogni comando il plugin chiede di salvare le modifiche in sospeso. Durante il run la barra segue i passi temporali.
+
+**Problemi.** Errori (✗) e avvisi (⚠) compaiono man mano che il core li trova. Per ognuno ci sono il messaggio, il luogo (layer, `fid`, campo o cella), il codice e il suggerimento. Quando il problema riguarda una feature:
+
+- **Mostra la feature** la seleziona e centra la mappa su di essa; per una tabella apre la tabella degli attributi su quella riga;
+- **Apri il form** apre il form della feature, per correggerla subito.
+
+Dopo la correzione si salva e si preme di nuovo Controlla.
+
+**Log.** Ora, avvio e fine di ogni comando, avvisi, errori e cartella dei risultati. I dettagli completi restano nel pannello dei messaggi di log, scheda Phrear.
+
+Dopo un run riuscito lo stato riporta la durata e l'errore di bilancio massimo, con periodo e passo. I carichi si caricano per ora a mano come mesh layer (guida CLI, sezione 6); il caricamento automatico arriva con il prossimo incremento.
+
+## 7. Problemi frequenti
 
 | Messaggio | Causa e rimedio |
 |---|---|
@@ -107,6 +128,7 @@ Dal form del padre si aggiungono i figli già collegati: un parametro aggiunto d
 | La cartella del core deve essere il repository di phrear | la cartella indicata non contiene `pixi.toml` e `src\phrear` |
 | Impossibile avviare il core | il percorso di pixi non è valido o pixi non si avvia; prova `pixi run phrear env` da PowerShell nella cartella del repository |
 | Il core usa un'altra versione del protocollo degli eventi | plugin e core vengono da versioni diverse del repository; aggiorna entrambi con `git pull` |
-| «unable to open database file» nei messaggi di log dopo un salvataggio, zoom al layer senza effetto | problema noto dell'estensione dei layer (ADR 0020); non tocca i dati. Salva, chiudi e riapri il progetto QGIS |
+| Il run «…» esiste già | ogni run ha una cartella sua che non viene sovrascritta; scegli un altro nome o lascia il campo vuoto |
+| L'identificativo del run non è valido | solo lettere, cifre, `_` e `-`, senza spazi |
 
-Controllo, esecuzione e risultati arrivano con i prossimi incrementi di M1b.
+Caricamento dei risultati ed elenco dei run arrivano con il prossimo incremento di M1b.
